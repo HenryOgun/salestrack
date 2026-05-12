@@ -544,8 +544,6 @@
     <div class="stats-row">
       <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-icon">&#128176;</div><div class="stat-val" id="db-revenue">&#8358;0</div><div class="stat-lbl">My Revenue</div></div>
       <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">&#8358;0</div><div class="stat-lbl">My Today</div></div>
-      <div class="stat-card" style="--stat-color:var(--purple)"><div class="stat-icon">&#127942;</div><div class="stat-val" id="db-top-seller">&mdash;</div><div class="stat-lbl">Top Seller</div></div>
-      <div class="stat-card" style="--stat-color:var(--yellow)"><div class="stat-icon">&#128230;</div><div class="stat-val" id="db-avg">&#8358;0</div><div class="stat-lbl">My Avg Deal</div></div>
     </div>
 
     <div class="section-title">Leaderboard</div>
@@ -664,7 +662,7 @@
   <!-- TEAM -->
   <div class="page" id="page-team">
     <div class="team-header">The Team</div>
-    <div class="team-sub">5 members &middot; Live stats</div>
+    <div class="team-sub">3 members &middot; Live stats</div>
     <div class="team-cards" id="team-cards"></div>
   </div>
 
@@ -679,8 +677,12 @@
       <button class="rpt-pill"        id="rpt-month" onclick="setReportPeriod('month')">Monthly</button>
       <button class="rpt-pill"        id="rpt-year"  onclick="setReportPeriod('year')" >Yearly</button>
     </div>
-    <div style="padding:0 14px 4px;display:flex;justify-content:flex-end">
-      <button onclick="exportCSV()" style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;padding:9px 18px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:6px">&#128229; Export CSV</button>
+    <div style="padding:0 14px 8px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+      <button onclick="exportCSV('day')"   style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Daily</button>
+      <button onclick="exportCSV('week')"  style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Weekly</button>
+      <button onclick="exportCSV('month')" style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Monthly</button>
+      <button onclick="exportCSV('year')"  style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Yearly</button>
+      <button onclick="exportCSV('all')"   style="background:var(--accent);border:1.5px solid var(--accent);color:#000;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Export All</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 14px 16px">
       <div class="stat-card"><div class="stat-val" id="rpt-rev">&#8358;0</div><div class="stat-lbl">Revenue</div></div>
@@ -1252,10 +1254,24 @@ function renderReports() {
   }).join('');
 }
 
-function exportCSV() {
+function exportCSV(period) {
   if (!sales.length) { toast('No sales recorded yet'); return; }
+  var filtered = sales.slice();
+  if (period && period !== 'all') {
+    var now = new Date(); var y=now.getFullYear(); var m=now.getMonth(); var d=now.getDate();
+    filtered = filtered.filter(function(s){
+      var t = new Date(s.ts);
+      if (period==='day')   return t.getFullYear()===y && t.getMonth()===m && t.getDate()===d;
+      if (period==='week')  { var ms=now-t; return ms>=0 && ms<=7*86400000; }
+      if (period==='month') return t.getFullYear()===y && t.getMonth()===m;
+      if (period==='year')  return t.getFullYear()===y;
+      return true;
+    });
+  }
+  if (!filtered.length) { toast('No records for this period'); return; }
+  var label = period==='day'?'Daily':period==='week'?'Weekly':period==='month'?'Monthly':period==='year'?'Yearly':'All';
   var headers = ['#','Date','Time','Logged By','Client','Product/Brand','Ad Type','Duration','Slots','Start Date','End Date','Amount (NGN)','Payment Type','Agency','Renewal','Notes'];
-  var sorted = sales.slice().sort(function(a,b){return a.ts-b.ts;});
+  var sorted = filtered.sort(function(a,b){return a.ts-b.ts;});
   var rows = sorted.map(function(s,i) {
     var seller = TEAM.find(function(m){return m.id===s.sellerId;})||{name:'Unknown'};
     var d = new Date(s.ts);
@@ -1282,10 +1298,10 @@ function exportCSV() {
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'SalesTrack-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download = 'SalesTrack-'+label+'-'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('Exported '+sorted.length+' record'+(sorted.length!==1?'s':'')+'!');
+  toast('Exported '+sorted.length+' '+label.toLowerCase()+' record'+(sorted.length!==1?'s':'')+'!');
 }
 
 var editingId = null;
@@ -1569,8 +1585,6 @@ function renderDash() {
   document.getElementById('db-deals').textContent = mySales.length;
   document.getElementById('db-revenue').textContent = '\u20A6'+fmtMoney(myRev);
   document.getElementById('db-today').textContent = '\u20A6'+fmtMoney(myTodayRev);
-  document.getElementById('db-top-seller').textContent = sorted[0]?sorted[0].emoji:'\u2014';
-  document.getElementById('db-avg').textContent = '\u20A6'+fmtMoney(myAvg);
   const maxRev = byM[sorted[0]?.id]?.rev||1;
   document.getElementById('leader-list').innerHTML = sorted.map((m,i)=>{
     const st=byM[m.id]; const bp=maxRev>0?Math.round((st.rev/maxRev)*100):0;
