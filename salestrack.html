@@ -947,11 +947,8 @@ function enterApp() {
 function switchUser() {
   localStorage.removeItem('salestrack_user'); currentUser = null;
   document.getElementById('screen-app').classList.remove('active');
-  document.getElementById('pw-input').value = '';
-  document.getElementById('pw-error').style.display = 'none';
-  document.getElementById('btn-login').classList.remove('ready');
-  document.getElementById('screen-login').classList.add('active');
-  setTimeout(()=>document.getElementById('pw-input').focus(), 300);
+  const device = localStorage.getItem(DEVICE_KEY);
+  if (device) { showLoginFor(device); } else { showSelectScreen(); }
 }
 
 function showTab(name) {
