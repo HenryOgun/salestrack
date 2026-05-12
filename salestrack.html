@@ -1140,6 +1140,13 @@ function enterApp() {
   document.getElementById('fab').style.display        = ch ? 'none' : '';
   refreshAll();
   showTab(ch ? 'admin' : 'feed');
+  requestNotifyPermission();
+}
+
+function requestNotifyPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 }
 function switchUser() {
   localStorage.removeItem('salestrack_user'); currentUser = null;
@@ -1647,11 +1654,29 @@ function clearNotifyDot() { document.getElementById('notify-dot').classList.remo
 function showNewSalePopup(sale) {
   const m = TEAM.find(t=>t.id===sale.sellerId);
   if (!m || m.id===currentUser?.id) return;
+  const msg = m.emoji+' '+m.name+' closed \u20A6'+fmtMoney(sale.amount)+' \u00B7 '+sale.slots+' slot'+(sale.slots>1?'s':'')+'! \u{1F389}';
+  // In-app banner
   const inner = document.getElementById('popup-inner');
-  inner.textContent = m.emoji+' '+m.name+' closed ₦'+fmtMoney(sale.amount)+' \u00B7 '+sale.slots+' slot'+(sale.slots>1?'s':'')+'! \u{1F389}';
+  inner.textContent = msg;
   inner.classList.add('show');
   if (newSaleTimer) clearTimeout(newSaleTimer);
   newSaleTimer = setTimeout(()=>inner.classList.remove('show'), 4000);
+  // System push notification (works when app is in background)
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const title = '\u{1F4B0} New Sale — ' + m.name;
+    const body  = (sale.client||'Client') + ' \u00B7 ' + (sale.pkg||'') + ' \u00B7 \u20A6' + fmtMoney(sale.amount) + ' (' + sale.slots + ' slot' + (sale.slots>1?'s':'') + ')';
+    try {
+      const n = new Notification(title, { body, icon: './icon-192.png', badge: './icon-192.png', tag: sale.id, renotify: true });
+      n.onclick = function() { window.focus(); switchToFeed(); n.close(); };
+    } catch(e) {
+      // Service worker notification fallback
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(function(reg) {
+          reg.showNotification(title, { body, icon: './icon-192.png', badge: './icon-192.png', tag: sale.id });
+        });
+      }
+    }
+  }
 }
 function toast(msg, dur) {
   const el = document.getElementById('toast');

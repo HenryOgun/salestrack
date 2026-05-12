@@ -27,3 +27,16 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request))
   );
 });
+
+// Handle notification clicks — open/focus the app
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes('salestrack') && 'focus' in client) return client.focus();
+      }
+      return clients.openWindow('./salestrack.html');
+    })
+  );
+});
