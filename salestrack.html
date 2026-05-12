@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SalesTrack">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="SalesTrack">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>SalesTrack — Team Sales Tracker</title>
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --surface: #16213e;
+    --card: #1a2744;
+    --border: rgba(255,255,255,0.08);
+    --accent: #4f8ef7;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --yellow: #f39c12;
+    --purple: #9b59b6;
+    --cyan: #1abc9c;
+    --text: #e8eaf0;
+    --muted: #8892a4;
+    --radius: 16px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --transition: 0.2s ease;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  .screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+  .screen.active { display: flex; }
+
+  /* LOGIN */
+  #screen-login {
+    align-items: center; justify-content: center;
+    background: linear-gradient(160deg, #0d0d1a 0%, #1a1a3e 100%);
+    padding: 32px 24px;
+  }
+  .login-logo { font-size: 52px; margin-bottom: 8px; }
+  .login-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .login-sub { font-size: 14px; color: var(--muted); margin-bottom: 40px; }
+  .login-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; align-self: flex-start; width: 100%; max-width: 340px; }
+  .member-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 340px; margin-bottom: 32px; }
+  .member-card {
+    background: var(--card); border: 2px solid var(--border); border-radius: var(--radius);
+    padding: 18px 14px; cursor: pointer; transition: var(--transition);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: relative; overflow: hidden;
+  }
+  .member-card::before { content: ''; position: absolute; inset: 0; background: var(--member-color, var(--accent)); opacity: 0; transition: var(--transition); }
+  .member-card:active::before, .member-card:hover::before { opacity: 0.12; }
+  .member-card.selected { border-color: var(--member-color, var(--accent)); box-shadow: 0 0 0 3px rgba(79,142,247,0.2); }
+  .member-avatar { font-size: 32px; }
+  .member-name { font-size: 13px; font-weight: 600; text-align: center; }
+  .member-role { font-size: 11px; color: var(--muted); text-align: center; }
+  .btn-login {
+    width: 100%; max-width: 340px; padding: 16px; background: var(--accent);
+    color: #fff; border: none; border-radius: var(--radius); font-size: 16px;
+    font-weight: 700; cursor: pointer; transition: var(--transition); opacity: 0.4; pointer-events: none;
+  }
+  .btn-login.ready { opacity: 1; pointer-events: all; }
+  .btn-login:active { transform: scale(0.98); }
+  .demo-hint { font-size: 12px; color: var(--muted); margin-top: 16px; text-align: center; max-width: 280px; line-height: 1.5; }
+
+  /* ── ROOT UPGRADES ── */
+  :root {
+    --bg: #0f0f1a;
+    --surface: #161625;
+    --card: #1c1c30;
+    --card2: #21213a;
+    --border: rgba(255,255,255,0.1);
+    --accent: #5b9bff;
+    --green: #34d67e;
+    --red: #ff5b5b;
+    --yellow: #f5a623;
+    --purple: #a78bfa;
+    --cyan: #22d3c8;
+    --text: #f0f2f8;
+    --text2: #c8cfe0;
+    --muted: #7a869e;
+    --radius: 16px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.45);
+    --transition: 0.2s ease;
+  }
+  html, body { font-size: 16px; }
+
+  /* ── APP SHELL ── */
+  #screen-app { background: var(--bg); }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; position: relative; z-index: 10;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; background: var(--card);
+    border: 2px solid var(--accent);
+  }
+  .topbar-name { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .topbar-company { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .topbar-notify { position: relative; cursor: pointer; font-size: 22px; padding: 4px; }
+  .notify-dot { position: absolute; top: 2px; right: 2px; width: 9px; height: 9px; background: var(--red); border-radius: 50%; border: 2px solid var(--surface); display: none; }
+  .notify-dot.active { display: block; }
+  .btn-switch {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text2); font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: 20px; cursor: pointer;
+  }
+
+  /* ── TABBAR ── */
+  .tabbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-shrink: 0;
+  }
+  .tab {
+    flex: 1; padding: 12px 4px 10px; border: none; background: none;
+    color: var(--muted); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.3px; text-transform: uppercase;
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; transition: var(--transition);
+    position: relative;
+  }
+  .tab-icon { font-size: 20px; }
+  .tab.active { color: var(--accent); }
+  .tab::after {
+    content: ''; position: absolute; bottom: 0; left: 15%; right: 15%;
+    height: 2px; background: var(--accent); border-radius: 2px 2px 0 0;
+    opacity: 0; transition: var(--transition);
+  }
+  .tab.active::after { opacity: 1; }
+
+  .page { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 100px; }
+  .page.active { display: block; }
+
+  /* ── PAGE HEADERS ── */
+  .page-header {
+    padding: 22px 20px 6px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .page-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .page-sub { padding: 4px 20px 18px; font-size: 14px; color: var(--muted); }
+
+  /* ── FEED ── */
+  .feed-header { padding: 22px 20px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .feed-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .feed-live { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green); font-weight: 700; }
+  .live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.4)} }
+
+  .sale-card {
+    margin: 0 10px 4px;
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+  .sale-card-top { padding: 9px 12px 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sale-left { display: flex; gap: 8px; align-items: center; flex: 1; min-width: 0; }
+  .sale-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .sale-meta { flex: 1; min-width: 0; }
+  .sale-seller { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .sale-client { font-size: 13px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sale-time { font-size: 12px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+  .sale-card-body { padding: 3px 12px 9px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .sale-stat { display: flex; align-items: center; gap: 4px; background: none; }
+  .sale-stat-val { font-size: 15px; font-weight: 800; color: var(--text); }
+  .sale-stat-lbl { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .sale-note {
+    margin: 0 12px 8px; padding: 5px 10px;
+    background: rgba(255,255,255,0.04); border-radius: 7px;
+    border-left: 3px solid var(--accent);
+    font-size: 13px; color: var(--text2); font-style: italic; line-height: 1.4;
+  }
+  .sale-new-badge {
+    display: inline-block; background: var(--green); color: #000;
+    font-size: 10px; font-weight: 800; padding: 2px 6px;
+    border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 7px 12px -2px;
+  }
+  .empty-feed { padding: 70px 24px; text-align: center; }
+  .empty-icon { font-size: 60px; margin-bottom: 18px; }
+  .empty-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .empty-sub { font-size: 15px; color: var(--muted); line-height: 1.5; }
+
+  /* ── DASHBOARD ── */
+  .dash-header { padding: 22px 20px 8px; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .slot-banner {
+    margin: 12px 14px; padding: 18px 20px;
+    background: linear-gradient(135deg, rgba(91,155,255,0.14), rgba(34,211,200,0.1));
+    border: 1px solid rgba(91,155,255,0.28);
+    border-radius: 18px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .slot-banner-item { text-align: center; }
+  .slot-banner-num { font-size: 26px; font-weight: 800; color: var(--text); }
+  .slot-banner-lbl { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .slot-divider { width: 1px; height: 40px; background: var(--border); }
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 14px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 18px 16px;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: -10px; right: -10px;
+    width: 70px; height: 70px; border-radius: 50%;
+    background: var(--stat-color, var(--accent)); opacity: 0.09;
+  }
+  .stat-icon { font-size: 24px; margin-bottom: 10px; }
+  .stat-val { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+  .stat-lbl { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 5px; }
+  .section-title {
+    padding: 16px 20px 10px;
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .progress-card {
+    margin: 0 14px 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 20px;
+  }
+  .progress-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 12px; }
+  .progress-label span:last-child { color: var(--accent); font-weight: 700; font-size: 15px; }
+  .progress-track { height: 10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); border-radius: 5px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .leader-list { padding: 0 14px; display: flex; flex-direction: column; gap: 10px; }
+  .leader-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .leader-rank { font-size: 18px; font-weight: 800; color: var(--muted); width: 28px; text-align: center; }
+  .leader-rank.top1 { color: #f1c40f; }
+  .leader-rank.top2 { color: #bdc3c7; }
+  .leader-rank.top3 { color: #cd7f32; }
+  .leader-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .leader-info { flex: 1; }
+  .leader-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .leader-deals { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+  .leader-rev { font-size: 16px; font-weight: 800; color: var(--green); }
+  .leader-bar-wrap { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 6px; }
+  .leader-bar { height: 4px; border-radius: 2px; }
+
+  /* ── LOG SALE ── */
+  .log-header { padding: 22px 20px 4px; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .log-sub { padding: 6px 20px 22px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+  .form-group { padding: 0 14px 18px; }
+  .form-label {
+    font-size: 13px; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 9px; display: block;
+  }
+  .form-input, .form-textarea, .form-select {
+    width: 100%; background: var(--card);
+    border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 15px 16px; color: var(--text);
+    font-size: 15px; font-family: inherit; font-weight: 500;
+    outline: none; transition: var(--transition); -webkit-appearance: none;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(91,155,255,0.15);
+    background: var(--card2);
+  }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); font-weight: 400; }
+  .form-textarea { resize: none; height: 90px; line-height: 1.5; }
+  .form-select option { background: #1c1c30; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px 18px; }
+  .form-row .form-group { padding: 0; }
+  .currency-wrap { position: relative; }
+  .currency-symbol { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text2); font-size: 15px; font-weight: 700; pointer-events: none; }
+  .currency-wrap .form-input { padding-left: 28px; }
+  .btn-submit {
+    margin: 4px 14px 0; width: calc(100% - 28px);
+    padding: 18px; background: var(--accent); color: #fff;
+    border: none; border-radius: 16px; font-size: 17px; font-weight: 800;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    gap: 8px; transition: var(--transition); letter-spacing: 0.2px;
+  }
+  .btn-submit:active { transform: scale(0.98); background: #4080e8; }
+
+  /* ── TEAM ── */
+  .team-header { padding: 22px 20px 4px; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .team-sub { padding: 6px 20px 18px; font-size: 14px; color: var(--muted); }
+  .team-cards { padding: 0 14px; display: flex; flex-direction: column; gap: 12px; }
+  .team-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 18px 18px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .team-avatar { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+  .team-info { flex: 1; }
+  .team-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+  .team-name { font-size: 16px; font-weight: 800; color: var(--text); }
+  .team-role { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 10px; }
+  .team-stats { display: flex; gap: 20px; }
+  .team-stat-item { text-align: center; }
+  .team-stat-num { font-size: 17px; font-weight: 800; color: var(--text); }
+  .team-stat-lbl { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
+  .online-badge { font-size: 11px; font-weight: 700; color: var(--green); background: rgba(52,214,126,0.12); padding: 3px 8px; border-radius: 20px; }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed; bottom: 26px; right: 20px;
+    width: 62px; height: 62px;
+    background: var(--accent); border: none; border-radius: 50%;
+    font-size: 30px; line-height: 1; color: #fff; cursor: pointer;
+    box-shadow: 0 6px 28px rgba(91,155,255,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50; transition: var(--transition);
+  }
+  .fab:active { transform: scale(0.92); }
+  .fab.hidden { opacity: 0; pointer-events: none; transform: scale(0.8); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 108px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e1e38; color: var(--text);
+    padding: 13px 22px; border-radius: 28px;
+    font-size: 14px; font-weight: 700;
+    opacity: 0; pointer-events: none; z-index: 9999;
+    transition: all 0.3s ease; white-space: nowrap;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── POPUP ── */
+  .new-sale-popup { position: fixed; top: 0; left: 0; right: 0; z-index: 200; display: flex; justify-content: center; padding: 14px 16px 0; pointer-events: none; }
+  .popup-inner {
+    background: var(--green); color: #0a2a1a;
+    border-radius: 16px; padding: 14px 20px;
+    font-size: 15px; font-weight: 800;
+    box-shadow: 0 8px 28px rgba(52,214,126,0.35);
+    opacity: 0; transform: translateY(-20px);
+    transition: all 0.35s cubic-bezier(.34,1.56,.64,1);
+    max-width: 380px; width: 100%;
+  }
+  .popup-inner.show { opacity: 1; transform: translateY(0); pointer-events: all; }
+
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+  .rpt-pill {
+    flex:1; padding:11px 6px; border:1.5px solid var(--border);
+    background:var(--card); color:var(--muted);
+    border-radius:12px; font-size:14px; font-weight:700;
+    cursor:pointer; transition:var(--transition);
+  }
+  .rpt-pill.active {
+    background:var(--accent); border-color:var(--accent); color:#fff;
+  }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-logo">&#128202;</div>
+  <div class="login-title">SalesTrack</div>
+  <div class="login-sub">Marketing Team &middot; Real-time Sales Board</div>
+
+  <!-- Single-member card shown after device is set up -->
+  <div id="login-member-card" style="background:var(--card);border:2px solid var(--border);border-radius:18px;padding:24px 28px;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:280px;margin-bottom:24px">
+    <div id="login-avatar" style="font-size:48px;line-height:1"></div>
+    <div id="login-name" style="font-size:18px;font-weight:700;color:var(--text)"></div>
+    <div id="login-role" style="font-size:12px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Password field -->
+  <div style="width:100%;max-width:340px;margin-bottom:16px">
+    <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Password</div>
+    <div style="position:relative">
+      <input id="pw-input" type="password" placeholder="Enter your password"
+        style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px 44px 14px 16px;color:var(--text);font-size:15px;font-family:inherit;outline:none;-webkit-appearance:none"
+        oninput="onPwInput()" onkeydown="if(event.key==='Enter')doLogin()">
+      <span id="pw-toggle" onclick="togglePw()"
+        style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;user-select:none">&#128065;</span>
+    </div>
+    <div id="pw-error" style="color:var(--red);font-size:12px;margin-top:6px;display:none">Incorrect password. Try again.</div>
+  </div>
+
+  <button class="btn-login" id="btn-login" onclick="doLogin()">Enter Dashboard</button>
+  <div class="demo-hint" style="margin-top:16px">Not you? <span onclick="clearDevice()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Change account</span></div>
+  <div style="margin-top:24px;font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.5px">Powered by <span style="color:var(--accent);font-weight:700">Henry Ogun</span></div>
+</div>
+
+<!-- DEVICE SETUP (first-time only) -->
+<div class="screen" id="screen-setup" style="align-items:center;justify-content:center;background:linear-gradient(160deg,#0d0d1a 0%,#1a1a3e 100%);padding:32px 24px">
+  <div class="login-logo">&#128202;</div>
+  <div class="login-title">SalesTrack</div>
+  <div class="login-sub" style="margin-bottom:28px">Who is using this phone?</div>
+  <div class="member-grid" id="member-grid"></div>
+  <button class="btn-login" id="btn-setup" onclick="confirmSetup()" style="margin-top:8px">Set as My Device</button>
+</div>
+
+<!-- APP -->
+<div class="screen" id="screen-app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-avatar" id="topbar-avatar"></div>
+      <div>
+        <div class="topbar-name" id="topbar-name">&mdash;</div>
+        <div class="topbar-company" id="topbar-sync">Marketing Team &bull; <span id="sync-status" style="color:#2ecc71">&#9679; Live</span></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-notify" onclick="switchToFeed()">&#128276;<span class="notify-dot" id="notify-dot"></span></div>
+      <button class="btn-switch" onclick="switchUser()">Switch</button>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab active" id="tab-feed" onclick="showTab('feed')"><span class="tab-icon">&#128203;</span>Feed</button>
+    <button class="tab" id="tab-dash" onclick="showTab('dash')"><span class="tab-icon">&#128200;</span>Dashboard</button>
+    <button class="tab" id="tab-reports" onclick="showTab('reports')"><span class="tab-icon">&#128196;</span>Reports</button>
+    <button class="tab" id="tab-log" onclick="showTab('log')"><span class="tab-icon">&#10133;</span>Log Sale</button>
+    <button class="tab" id="tab-admin" onclick="showTab('admin')" style="display:none"><span class="tab-icon">&#128274;</span>Admin</button>
+    <button class="tab" id="tab-team" onclick="showTab('team')"><span class="tab-icon">&#128101;</span>Team</button>
+  </div>
+
+  <!-- FEED -->
+  <div class="page active" id="page-feed">
+    <div class="feed-header">
+      <div class="feed-title">Live Feed</div>
+      <div class="feed-live"><span class="live-dot"></span>Live</div>
+    </div>
+    <div id="feed-list"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page" id="page-dash">
+    <div class="dash-header">Dashboard</div>
+    <div class="slot-banner">
+      <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-sold" style="color:var(--accent)">0</div><div class="slot-banner-lbl">Slots Sold</div></div>
+      <div class="slot-divider"></div>
+      <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-left" style="color:var(--yellow)">100</div><div class="slot-banner-lbl">Slots Left</div></div>
+      <div class="slot-divider"></div>
+      <div class="slot-banner-item"><div class="slot-banner-num" id="db-deals" style="color:var(--green)">0</div><div class="slot-banner-lbl">Total Deals</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-icon">&#128176;</div><div class="stat-val" id="db-revenue">&#8358;0</div><div class="stat-lbl">Total Revenue</div></div>
+      <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">&#8358;0</div><div class="stat-lbl">Today</div></div>
+      <div class="stat-card" style="--stat-color:var(--purple)"><div class="stat-icon">&#127942;</div><div class="stat-val" id="db-top-seller">&mdash;</div><div class="stat-lbl">Top Seller</div></div>
+      <div class="stat-card" style="--stat-color:var(--yellow)"><div class="stat-icon">&#128230;</div><div class="stat-val" id="db-avg">&#8358;0</div><div class="stat-lbl">Avg Deal</div></div>
+    </div>
+    <div class="progress-card">
+      <div class="progress-label"><span>Today's Target (&#8358;50k)</span><span id="progress-pct">0%</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="section-title">Leaderboard</div>
+    <div class="leader-list" id="leader-list"></div>
+  </div>
+
+  <!-- LOG SALE -->
+  <div class="page" id="page-log">
+    <div class="log-header">Log a Sale</div>
+    <div class="log-sub">Fill in the details &mdash; your teammates see it instantly.</div>
+    <div class="form-group">
+      <label class="form-label">Client / Company Name</label>
+      <input class="form-input" id="f-client" type="text" placeholder="e.g. Apex Logistics Ltd" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Product / Brand Name</label>
+      <input class="form-input" id="f-product" type="text" placeholder="e.g. Apex Energy Drink" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ad Type</label>
+      <select class="form-select" id="f-package">
+        <option value="">&#8212; Select ad type &#8212;</option>
+        <option value="Jingle">Jingle</option>
+        <option value="Commercial">Commercial / Social Programme</option>
+        <option value="Political Jingle">Political Jingle</option>
+        <option value="Political Programme">Political Programme</option>
+        <option value="Religious">Religious</option>
+        <option value="Personal Announcement">Personal Announcement</option>
+        <option value="Corporate Announcement">Corporate Announcement</option>
+        <option value="Hype">Hype</option>
+        <option value="Studio Recording">Studio Recording</option>
+        <option value="Jingle Production">Jingle Production</option>
+        <option value="Off Air Dubs">Off Air Dubs</option>
+        <option value="Others">Others</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Duration</label>
+        <input class="form-input" id="f-duration" type="text" list="duration-list" placeholder="e.g. 1 min, 5 mins..." autocomplete="off">
+        <datalist id="duration-list">
+          <option value="1 min">
+          <option value="2 mins">
+          <option value="5 mins">
+          <option value="10 mins">
+          <option value="15 mins">
+          <option value="20 mins">
+          <option value="30 mins">
+          <option value="45 mins">
+          <option value="60 mins">
+        </datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. of Slots</label>
+        <input class="form-input" id="f-slots" type="number" inputmode="numeric" placeholder="e.g. 4" min="1" step="1">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Start Date</label>
+        <input class="form-input" id="f-start-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Date</label>
+        <input class="form-input" id="f-end-date" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Amount (&#8358;)</label>
+        <div class="currency-wrap">
+          <span class="currency-symbol">&#8358;</span>
+          <input class="form-input" id="f-amount" type="number" inputmode="decimal" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Type</label>
+        <select class="form-select" id="f-payment" onchange="onPaymentChange()">
+          <option value="Cash">Cash</option>
+          <option value="Transfer">Transfer</option>
+          <option value="Credit">Credit (Agency)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" id="f-agency-wrap" style="display:none">
+      <label class="form-label">Agency Name</label>
+      <input class="form-input" id="f-agency" type="text" placeholder="e.g. Medialink Agency Ltd" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="margin-bottom:10px">Campaign Renewal?</label>
+      <div style="display:flex;gap:10px">
+        <label style="flex:1;display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:var(--transition)" id="renew-yes-lbl">
+          <input type="radio" name="renewal" id="renew-yes" value="yes" onchange="setRenewal('yes')" style="display:none">
+          <span style="font-size:20px">&#9989;</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">Yes</div><div style="font-size:11px;color:var(--muted)">Renewing</div></div>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:var(--transition)" id="renew-no-lbl">
+          <input type="radio" name="renewal" id="renew-no" value="no" onchange="setRenewal('no')" style="display:none">
+          <span style="font-size:20px">&#10060;</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">No</div><div style="font-size:11px;color:var(--muted)">New client</div></div>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:var(--transition)" id="renew-pending-lbl">
+          <input type="radio" name="renewal" id="renew-pending" value="pending" onchange="setRenewal('pending')" style="display:none">
+          <span style="font-size:20px">&#128336;</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">Pending</div><div style="font-size:11px;color:var(--muted)">Deciding</div></div>
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea class="form-textarea" id="f-notes" placeholder="Any extra context about this deal..."></textarea>
+    </div>
+    <button class="btn-submit" onclick="submitSale()">&#128640; Post Sale</button>
+  </div>
+
+  <!-- TEAM -->
+  <div class="page" id="page-team">
+    <div class="team-header">The Team</div>
+    <div class="team-sub">5 members &middot; Live stats</div>
+    <div class="team-cards" id="team-cards"></div>
+  </div>
+
+  <!-- REPORTS PAGE -->
+  <div class="page" id="page-reports">
+    <div class="feed-header">
+      <div class="feed-title">Reports</div>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 14px 18px">
+      <button class="rpt-pill active" id="rpt-day"   onclick="setReportPeriod('day')"  >Daily</button>
+      <button class="rpt-pill"        id="rpt-week"  onclick="setReportPeriod('week')" >Weekly</button>
+      <button class="rpt-pill"        id="rpt-month" onclick="setReportPeriod('month')">Monthly</button>
+      <button class="rpt-pill"        id="rpt-year"  onclick="setReportPeriod('year')" >Yearly</button>
+    </div>
+    <div style="padding:0 14px 4px;display:flex;justify-content:flex-end">
+      <button onclick="exportCSV()" style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;padding:9px 18px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:6px">&#128229; Export CSV</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 14px 16px">
+      <div class="stat-card"><div class="stat-val" id="rpt-rev">&#8358;0</div><div class="stat-lbl">Revenue</div></div>
+      <div class="stat-card"><div class="stat-val" id="rpt-deals">0</div><div class="stat-lbl">Deals</div></div>
+      <div class="stat-card"><div class="stat-val" id="rpt-slots">0</div><div class="stat-lbl">Slots</div></div>
+    </div>
+    <div style="padding:0 14px 6px">
+      <div class="section-title" style="padding:0 0 12px">Team Performance</div>
+      <div id="rpt-members"></div>
+    </div>
+    <div style="padding:0 14px 6px">
+      <div class="section-title" style="padding:0 0 12px">Campaign Renewals</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px 20px;display:flex;gap:0">
+        <div style="flex:1;text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--green)" id="rpt-renew-yes">0</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">&#9989; Renewing</div>
+        </div>
+        <div style="width:1px;background:var(--border);margin:0 8px"></div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--red)" id="rpt-renew-no">0</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">&#10060; Not Renewing</div>
+        </div>
+        <div style="width:1px;background:var(--border);margin:0 8px"></div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--yellow)" id="rpt-renew-pending">0</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px">&#128336; Pending</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 14px 6px">
+      <div class="section-title" style="padding:16px 0 12px">Transactions</div>
+      <div id="rpt-tx-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+    <div style="height:100px"></div>
+  </div>
+
+  <!-- ADMIN PAGE (Chairman only) -->
+  <div class="page" id="page-admin">
+    <div style="padding:16px 16px 0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <span style="font-size:26px">🔐</span>
+        <div>
+          <div style="font-size:17px;font-weight:700;color:var(--text)">Admin Control Centre</div>
+          <div style="font-size:12px;color:var(--muted)">Full visibility across all team activity</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 16px 0">
+      <div class="stat-card"><div class="stat-val" id="adm-total-rev">₦0</div><div class="stat-label">Total Revenue</div></div>
+      <div class="stat-card"><div class="stat-val" id="adm-total-deals">0</div><div class="stat-label">Total Deals</div></div>
+      <div class="stat-card"><div class="stat-val" id="adm-total-slots">0</div><div class="stat-label">Slots Sold</div></div>
+    </div>
+    <div style="padding:14px 16px 0">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Team Breakdown</div>
+      <div id="adm-team-breakdown"></div>
+    </div>
+    <div style="padding:14px 16px 0">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">All Transactions</div>
+      <div id="adm-tx-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+    <div style="height:100px"></div>
+  </div>
+
+</div>
+
+<button class="fab hidden" id="fab" onclick="showTab('log')">+</button>
+<div class="toast" id="toast"></div>
+<div class="new-sale-popup"><div class="popup-inner" id="popup-inner"></div></div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="min-height:100%;display:flex;align-items:flex-end;padding-top:60px">
+    <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp .3s ease">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px">
+        <div style="font-size:18px;font-weight:800;color:var(--text)">&#9998; Edit Sale</div>
+        <button onclick="closeEdit()" style="background:var(--card);border:none;color:var(--muted);font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer">&times;</button>
+      </div>
+      <div class="form-group"><label class="form-label">Client / Company</label><input class="form-input" id="e-client" type="text" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Product / Brand</label><input class="form-input" id="e-product" type="text" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Ad Type</label>
+        <select class="form-select" id="e-package">
+          <option value="">&#8212; Select ad type &#8212;</option>
+          <option value="Jingle">Jingle</option>
+          <option value="Commercial">Commercial / Social Programme</option>
+          <option value="Political Jingle">Political Jingle</option>
+          <option value="Political Programme">Political Programme</option>
+          <option value="Personal Announcement">Personal Announcement</option>
+          <option value="Corporate Announcement">Corporate Announcement</option>
+          <option value="Hype">Hype</option>
+          <option value="Studio Recording">Studio Recording</option>
+          <option value="Jingle Production">Jingle Production</option>
+          <option value="Off Air Dubs">Off Air Dubs</option>
+          <option value="Religious">Religious</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 18px">
+        <div><label class="form-label">Duration</label><input class="form-input" id="e-duration" type="text" list="duration-list" autocomplete="off"></div>
+        <div><label class="form-label">No. of Slots</label><input class="form-input" id="e-slots" type="number" inputmode="numeric" min="1"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 18px">
+        <div><label class="form-label">Start Date</label><input class="form-input" id="e-start-date" type="date"></div>
+        <div><label class="form-label">End Date</label><input class="form-input" id="e-end-date" type="date"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 18px">
+        <div><label class="form-label">Amount (&#8358;)</label><div class="currency-wrap"><span class="currency-symbol">&#8358;</span><input class="form-input" id="e-amount" type="number" inputmode="decimal" min="0" step="0.01" style="padding-left:28px"></div></div>
+        <div><label class="form-label">Payment</label>
+          <select class="form-select" id="e-payment" onchange="onEditPaymentChange()">
+            <option value="Cash">Cash</option>
+            <option value="Transfer">Transfer</option>
+            <option value="Credit">Credit (Agency)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="e-agency-wrap" style="display:none"><label class="form-label">Agency Name</label><input class="form-input" id="e-agency" type="text" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label" style="margin-bottom:10px">Campaign Renewal?</label>
+        <div style="display:flex;gap:10px">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer" id="er-yes-lbl"><input type="radio" name="e-renewal" id="er-yes" value="yes" onchange="setEditRenewal('yes')" style="display:none"><span style="font-size:18px">&#9989;</span><div><div style="font-weight:600;font-size:12px;color:var(--text)">Yes</div></div></label>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer" id="er-no-lbl"><input type="radio" name="e-renewal" id="er-no" value="no" onchange="setEditRenewal('no')" style="display:none"><span style="font-size:18px">&#10060;</span><div><div style="font-weight:600;font-size:12px;color:var(--text)">No</div></div></label>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer" id="er-pending-lbl"><input type="radio" name="e-renewal" id="er-pending" value="pending" onchange="setEditRenewal('pending')" style="display:none"><span style="font-size:18px">&#128336;</span><div><div style="font-weight:600;font-size:12px;color:var(--text)">Pending</div></div></label>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="e-notes"></textarea></div>
+      <div style="padding:0 14px"><button onclick="saveEdit()" style="width:100%;padding:17px;background:var(--accent);color:#fff;border:none;border-radius:16px;font-size:17px;font-weight:800;cursor:pointer">&#10003; Save Changes</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// TEAM CONFIG
+const TEAM = [
+  { id: 'ada',   name: 'Baba Marketing', role: 'Head of Marketing',  pass: 'baba2025',   emoji: '\u{1F469}\u{1F3FD}\u200D\u{1F4BC}', color: '#4f8ef7' },
+  { id: 'tunde', name: 'Bisola', role: 'Compliance Officer',    pass: 'bisola2025', emoji: '\u{1F468}\u{1F3FF}\u200D\u{1F4BC}', color: '#2ecc71' },
+  { id: 'grace', name: 'Seyi',   role: 'Marketer',     pass: 'seyi2025',   emoji: '\u{1F469}\u{1F3FB}\u200D\u{1F4BC}', color: '#9b59b6' },
+  { id: 'emeka', name: 'Chairman', role: 'Executive Oversight', pass: 'chairman2025', emoji: '\u{1F468}\u{1F3FE}\u200D\u{1F4BC}', color: '#f39c12' },
+  { id: 'sola',  name: 'Admin',  role: 'Business Dev',  pass: 'admin2025',  emoji: '\u{1F9D1}\u{1F3FD}\u200D\u{1F4BC}', color: '#1abc9c' },
+];
+const DAILY_TARGET = 50000;
+const TOTAL_SLOTS  = 100;
+const STORAGE_KEY  = 'salestrack_sales_v1';
+const CHANNEL_NAME = 'salestrack_sync';
+
+// ─── FIREBASE CONFIG ────────────────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey:            'AIzaSyBr7J9bHMNd7MfHpzPAVsOOd0UIgGiRfAM',
+  authDomain:        'diamond-fm-salestrack.firebaseapp.com',
+  databaseURL:       'https://diamond-fm-salestrack-default-rtdb.firebaseio.com',
+  projectId:         'diamond-fm-salestrack',
+  storageBucket:     'diamond-fm-salestrack.firebasestorage.app',
+  messagingSenderId: '805155892132',
+  appId:             '1:805155892132:web:7fbd84657f6d13c7212f31'
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+let db = null;
+function firebaseReady() { return db !== null; }
+
+let currentUser = null, sales = [], selectedMemberId = null;
+let channel = null, newSaleTimer = null, toastTimer = null;
+
+const DEVICE_KEY = 'salestrack_device';
+
+function init() {
+  loadSales(); setupChannel();
+  const loggedIn = localStorage.getItem('salestrack_user');
+  const device   = localStorage.getItem(DEVICE_KEY);
+  if (loggedIn) {
+    const m = TEAM.find(t => t.id === loggedIn);
+    if (m) { currentUser = m; enterApp(); return; }
+  }
+  if (device) {
+    showLoginFor(device);
+  } else {
+    buildLoginGrid();
+    document.getElementById('screen-setup').classList.add('active');
+  }
+}
+// ── Local fallback (used when Firebase is not configured) ──
+function loadSalesLocal() { try { sales = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { sales = []; } }
+function saveSalesLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(sales)); }
+
+// ── Firebase init + realtime listener ──
+function setupChannel() {
+  if (FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.apiKey) {
+    try {
+      const app = firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.database(app);
+      const ref = db.ref('sales');
+      ref.on('value', snap => {
+        const data = snap.val();
+        const incoming = data ? Object.values(data).sort((a,b)=>b.ts-a.ts) : [];
+        const hadNew = incoming.some(s => !sales.find(x => x.id === s.id));
+        sales = incoming;
+        saveSalesLocal();
+        if (document.getElementById('screen-app').classList.contains('active')) {
+          refreshAll();
+          if (hadNew && sales.length) { showNewSalePopup(sales[0]); showNotifyDot(); }
+        }
+      });
+      console.log('Firebase connected');
+      const ss = document.getElementById('sync-status');
+      if (ss) { ss.textContent = '● Live'; ss.style.color = '#2ecc71'; }
+      return;
+    } catch(e) { console.warn('Firebase init failed, using local mode', e);
+      const ss = document.getElementById('sync-status');
+      if (ss) { ss.textContent = '● Local only'; ss.style.color = '#f39c12'; }
+    }
+  }
+  // Fallback: BroadcastChannel (same-device tabs only)
+  const ss2 = document.getElementById('sync-status');
+  if (ss2) { ss2.textContent = '● Local only'; ss2.style.color = '#f39c12'; }
+  if (window.BroadcastChannel) {
+    channel = new BroadcastChannel(CHANNEL_NAME);
+    channel.onmessage = (e) => {
+      if (e.data.type === 'NEW_SALE') {
+        const s = e.data.sale;
+        if (!sales.find(x => x.id === s.id)) {
+          sales.unshift(s); saveSalesLocal();
+          if (document.getElementById('screen-app').classList.contains('active')) {
+            refreshAll(); showNewSalePopup(s); showNotifyDot();
+          }
+        }
+      } else if (e.data.type === 'CLEAR') { sales = []; saveSalesLocal(); refreshAll(); }
+    };
+  }
+}
+
+function loadSales() { loadSalesLocal(); }
+function saveSales() {
+  saveSalesLocal();
+  if (firebaseReady()) {
+    const salesObj = {};
+    sales.forEach(s => { salesObj[s.id] = s; });
+    db.ref('sales').set(salesObj).catch(e => console.warn('Firebase write error', e));
+  }
+}
+function broadcast(type, payload) {
+  if (firebaseReady()) return; // Firebase handles sync
+  if (channel) channel.postMessage({ type, ...payload });
+}
+
+function showLoginFor(memberId) {
+  const m = TEAM.find(t => t.id === memberId);
+  if (!m) { clearDevice(); return; }
+  currentUser = null;
+  selectedMemberId = memberId;
+  document.getElementById('login-avatar').textContent = m.emoji;
+  document.getElementById('login-name').textContent   = m.name;
+  document.getElementById('login-role').textContent   = m.role;
+  const card = document.getElementById('login-member-card');
+  card.style.borderColor = m.color;
+  card.style.boxShadow   = '0 0 0 3px '+m.color+'33';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  document.getElementById('btn-login').classList.remove('ready');
+  document.getElementById('screen-setup').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  setTimeout(()=>document.getElementById('pw-input').focus(), 300);
+}
+
+function clearDevice() {
+  localStorage.removeItem(DEVICE_KEY);
+  localStorage.removeItem('salestrack_user');
+  currentUser = null; selectedMemberId = null;
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.remove('active');
+  buildLoginGrid();
+  document.getElementById('screen-setup').classList.add('active');
+}
+
+function buildLoginGrid() {
+  document.getElementById('member-grid').innerHTML = TEAM.map(m =>
+    `<div class="member-card" id="lc-${m.id}" style="--member-color:${m.color}" onclick="selectMember('${m.id}')">
+      <div class="member-avatar">${m.emoji}</div>
+      <div class="member-name">${m.name}</div>
+      <div class="member-role">${m.role}</div>
+    </div>`
+  ).join('');
+}
+function confirmSetup() {
+  if (!selectedMemberId) return;
+  localStorage.setItem(DEVICE_KEY, selectedMemberId);
+  showLoginFor(selectedMemberId);
+}
+
+function selectMember(id) {
+  selectedMemberId = id;
+  document.querySelectorAll('.member-card').forEach(card => card.classList.remove('selected'));
+  const mc = document.getElementById('lc-' + id);
+  if (mc) mc.classList.add('selected');
+  document.getElementById('btn-setup').classList.add('ready');
+}
+function onPwInput() {
+  const val = document.getElementById('pw-input').value;
+  document.getElementById('btn-login').classList.toggle('ready', val.length > 0);
+  document.getElementById('pw-error').style.display = 'none';
+}
+function togglePw() {
+  const inp = document.getElementById('pw-input');
+  const tog = document.getElementById('pw-toggle');
+  if (inp.type === 'password') { inp.type = 'text'; tog.textContent = '\uD83D\uDE48'; }
+  else { inp.type = 'password'; tog.textContent = '\uD83D\uDC41\uFE0F'; }
+}
+function doLogin() {
+  if (!selectedMemberId) return;
+  const member = TEAM.find(m => m.id === selectedMemberId);
+  const entered = document.getElementById('pw-input').value;
+  if (entered !== member.pass) {
+    const errEl = document.getElementById('pw-error');
+    errEl.style.display = 'block';
+    const inp = document.getElementById('pw-input');
+    inp.style.borderColor = 'var(--red)';
+    inp.style.boxShadow = '0 0 0 3px rgba(231,76,60,0.15)';
+    setTimeout(() => { inp.style.borderColor = ''; inp.style.boxShadow = ''; }, 1500);
+    return;
+  }
+  currentUser = member;
+  localStorage.setItem('salestrack_user', currentUser.id);
+  enterApp();
+}
+function isChairman() { return currentUser && currentUser.id === 'emeka'; }
+
+function enterApp() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('topbar-avatar').textContent = currentUser.emoji;
+  document.getElementById('topbar-name').textContent = currentUser.name;
+  const ch = isChairman();
+  document.getElementById('tab-log').style.display   = ch ? 'none' : '';
+  document.getElementById('tab-admin').style.display  = ch ? ''    : 'none';
+  document.getElementById('fab').style.display        = ch ? 'none' : '';
+  refreshAll();
+  showTab(ch ? 'admin' : 'feed');
+}
+function switchUser() {
+  localStorage.removeItem('salestrack_user'); currentUser = null;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  document.getElementById('btn-login').classList.remove('ready');
+  document.getElementById('screen-login').classList.add('active');
+  setTimeout(()=>document.getElementById('pw-input').focus(), 300);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('fab').classList.toggle('hidden', name === 'log' || isChairman());
+  if (name === 'feed')  { renderFeed(); clearNotifyDot(); }
+  if (name === 'dash')  renderDash();
+  if (name === 'team')  renderTeam();
+  if (name === 'admin') renderAdmin();
+  if (name === 'reports') renderReports();
+}
+
+let reportPeriod = 'day';
+
+function setReportPeriod(p) {
+  reportPeriod = p;
+  ['day','week','month','year'].forEach(function(x) {
+    var el = document.getElementById('rpt-'+x);
+    if (el) el.classList.toggle('active', x===p);
+  });
+  renderReports();
+}
+
+function getPeriodSales(p) {
+  var now = new Date();
+  return sales.filter(function(s) {
+    var d = new Date(s.ts);
+    if (p === 'day')   return d.toDateString() === now.toDateString();
+    if (p === 'week')  { var w=new Date(now); w.setDate(now.getDate()-6); w.setHours(0,0,0,0); return d>=w; }
+    if (p === 'month') return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    if (p === 'year')  return d.getFullYear()===now.getFullYear();
+    return true;
+  });
+}
+
+function renderReports() {
+  var subset = getPeriodSales(reportPeriod);
+  var totalRev   = subset.reduce(function(a,s){return a+s.amount;},0);
+  var totalDeals = subset.length;
+  var totalSlots = subset.reduce(function(a,s){return a+s.slots;},0);
+  function setEl(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  setEl('rpt-rev',   '\u20A6'+fmtMoney(totalRev));
+  setEl('rpt-deals', totalDeals);
+  setEl('rpt-slots', totalSlots);
+
+  var renewCounts = {yes:0, no:0, pending:0};
+  subset.forEach(function(s){ if(renewCounts[s.renewal]!==undefined) renewCounts[s.renewal]++; });
+  setEl('rpt-renew-yes',     renewCounts.yes);
+  setEl('rpt-renew-no',      renewCounts.no);
+  setEl('rpt-renew-pending', renewCounts.pending);
+
+  var visibleMembers = TEAM.filter(function(m){return m.id!=='emeka'&&m.id!=='sola';});
+  var byM = {};
+  visibleMembers.forEach(function(m){byM[m.id]={rev:0,deals:0,slots:0};});
+  subset.forEach(function(s){if(byM[s.sellerId]){byM[s.sellerId].rev+=s.amount;byM[s.sellerId].deals++;byM[s.sellerId].slots+=s.slots;}});
+  var maxRev = Math.max.apply(null,[1].concat(visibleMembers.map(function(m){return byM[m.id].rev;})));
+
+  var membersEl = document.getElementById('rpt-members');
+  if (membersEl) {
+    membersEl.innerHTML = visibleMembers.slice().sort(function(a,b){return byM[b.id].rev-byM[a.id].rev;}).map(function(m) {
+      var st=byM[m.id]; var pct=Math.round((st.rev/maxRev)*100);
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+        +'<span style="font-size:22px">'+m.emoji+'</span>'
+        +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--text)">'+m.name+'</div>'
+        +'<div style="font-size:12px;color:var(--muted)">'+st.deals+' deal'+(st.deals!==1?'s':'')+' &bull; '+st.slots+' slot'+(st.slots!==1?'s':'')+'</div></div>'
+        +'<div style="font-size:16px;font-weight:800;color:'+m.color+'">'+'\u20A6'+fmtMoney(st.rev)+'</div>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,0.07);border-radius:5px;height:8px;overflow:hidden">'
+        +'<div style="background:'+m.color+';height:100%;width:'+pct+'%;border-radius:5px;transition:width .5s"></div>'
+        +'</div></div>';
+    }).join('');
+  }
+
+  var txEl = document.getElementById('rpt-tx-list');
+  if (!txEl) return;
+  if (!subset.length) {
+    txEl.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--muted);font-size:14px;font-weight:600">No sales in this period</div>';
+    return;
+  }
+  var sorted = subset.slice().sort(function(a,b){return b.ts-a.ts;});
+  txEl.innerHTML = sorted.map(function(s) {
+    var seller = TEAM.find(function(m){return m.id===s.sellerId;})||{name:'Unknown',emoji:'?',color:'#888'};
+    var d = new Date(s.ts);
+    var timeStr = d.toLocaleDateString('en-NG',{weekday:'short',day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+    var renewIcon = s.renewal==='yes'?'\u2705':s.renewal==='no'?'\u274C':s.renewal==='pending'?'\u23F0':'';
+    var productLine = s.product ? ' &bull; '+esc(s.product) : '';
+    var pkgLine = (s.pkg&&s.pkg!=='General') ? '<span style="color:var(--muted)">\uD83C\uDFF7\uFE0F '+esc(s.pkg)+'</span>' : '';
+    var notesLine = s.notes ? '<div style="margin-top:8px;font-size:13px;color:var(--text2);font-style:italic;border-top:1px solid var(--border);padding-top:8px">&ldquo;'+esc(s.notes)+'&rdquo;</div>' : '';
+    return '<div style="background:var(--card);border-radius:16px;padding:14px 16px;border-left:4px solid '+seller.color+';border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      +'<span style="font-size:18px">'+seller.emoji+'</span>'
+      +'<span style="font-weight:700;font-size:14px;color:var(--text)">'+seller.name+'</span>'
+      +'<span style="margin-left:auto;font-size:12px;color:var(--muted)">'+timeStr+'</span>'
+      +'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">'+esc(s.client)+productLine+'</div>'
+      +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px">'
+      +'<span style="color:'+seller.color+';font-weight:800;font-size:15px">\u20A6'+fmtMoney(s.amount)+'</span>'
+      +'<span style="color:var(--muted)">\uD83D\uDCE6 '+s.slots+' slot'+(s.slots!==1?'s':'')+'</span>'
+      +(renewIcon?'<span>'+renewIcon+'</span>':'')
+      +pkgLine
+      +'</div>'
+      +notesLine
+      +'</div>';
+  }).join('');
+}
+
+function exportCSV() {
+  if (!sales.length) { toast('No sales recorded yet'); return; }
+  var headers = ['#','Date','Time','Logged By','Client','Product/Brand','Ad Type','Duration','Slots','Start Date','End Date','Amount (NGN)','Payment Type','Agency','Renewal','Notes'];
+  var sorted = sales.slice().sort(function(a,b){return a.ts-b.ts;});
+  var rows = sorted.map(function(s,i) {
+    var seller = TEAM.find(function(m){return m.id===s.sellerId;})||{name:'Unknown'};
+    var d = new Date(s.ts);
+    var mo = d.getMonth()+1; var dy = d.getDate(); var yr = d.getFullYear();
+    var hr = d.getHours(); var mn = d.getMinutes();
+    var dateStr = (dy<10?'0':'')+dy+'/'+(mo<10?'0':'')+mo+'/'+yr;
+    var timeStr = (hr<10?'0':'')+hr+':'+(mn<10?'0':'')+mn;
+    var renewalText = s.renewal==='yes'?'Renewing':s.renewal==='no'?'Not Renewing':s.renewal==='pending'?'Pending':'-';
+    function q(v){
+      var str = (v!=null && v!==undefined ? v : '').toString();
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    function fmtD(d){return d?d.split('-').reverse().join('-'):''}
+    return [
+      i+1, q(dateStr), q(timeStr), q(seller.name),
+      q(s.client||''), q(s.product||''), q(s.pkg||''), q(s.duration||''),
+      q(s.slots||0), q(fmtD(s.startDate)), q(fmtD(s.endDate)),
+      q(s.amount||0), q(s.payment||'Cash'), q(s.agency||''),
+      q(renewalText), q(s.notes||'')
+    ].join(',');
+  });
+  var csv = '\uFEFF' + [headers.map(function(h){return '"'+h+'"';}).join(',')].concat(rows).join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'SalesTrack-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Exported '+sorted.length+' record'+(sorted.length!==1?'s':'')+'!');
+}
+
+var editingId = null;
+var editRenewal = '';
+
+function openEdit(id) {
+  var s = sales.find(function(x){return x.id===id;});
+  if (!s) return;
+  editingId = id;
+  editRenewal = s.renewal||'';
+  document.getElementById('e-client').value    = s.client||'';
+  document.getElementById('e-product').value   = s.product||'';
+  document.getElementById('e-package').value   = s.pkg||'';
+  document.getElementById('e-duration').value  = s.duration||'';
+  document.getElementById('e-slots').value     = s.slots||'';
+  document.getElementById('e-start-date').value= s.startDate||'';
+  document.getElementById('e-end-date').value  = s.endDate||'';
+  document.getElementById('e-amount').value    = s.amount||'';
+  document.getElementById('e-payment').value   = s.payment||'Cash';
+  document.getElementById('e-agency').value    = s.agency||'';
+  document.getElementById('e-agency-wrap').style.display = s.payment==='Credit'?'block':'none';
+  document.getElementById('e-notes').value     = s.notes||'';
+  ['yes','no','pending'].forEach(function(v){
+    document.getElementById('er-'+v+'-lbl').style.borderColor = v===editRenewal?'var(--accent)':'var(--border)';
+    document.getElementById('er-'+v+'-lbl').style.background  = v===editRenewal?'rgba(91,155,255,0.1)':'var(--card)';
+    document.getElementById('er-'+v).checked = v===editRenewal;
+  });
+  document.getElementById('edit-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  editingId = null;
+}
+
+function setEditRenewal(val) {
+  editRenewal = val;
+  ['yes','no','pending'].forEach(function(v){
+    document.getElementById('er-'+v+'-lbl').style.borderColor = v===val?'var(--accent)':'var(--border)';
+    document.getElementById('er-'+v+'-lbl').style.background  = v===val?'rgba(91,155,255,0.1)':'var(--card)';
+  });
+}
+
+function onEditPaymentChange() {
+  var val = document.getElementById('e-payment').value;
+  document.getElementById('e-agency-wrap').style.display = val==='Credit'?'block':'none';
+}
+
+function saveEdit() {
+  if (!editingId) return;
+  var idx = sales.findIndex(function(x){return x.id===editingId;});
+  if (idx === -1) { toast('Sale not found'); return; }
+  var client = document.getElementById('e-client').value.trim();
+  var amount = parseFloat(document.getElementById('e-amount').value);
+  var slots  = parseInt(document.getElementById('e-slots').value);
+  if (!client)              { toast('Client name required'); return; }
+  if (!amount || amount<=0) { toast('Valid amount required'); return; }
+  if (!slots  || slots<=0)  { toast('Slots required'); return; }
+  var payment = document.getElementById('e-payment').value||'Cash';
+  sales[idx] = Object.assign({}, sales[idx], {
+    client:    client,
+    product:   document.getElementById('e-product').value.trim(),
+    pkg:       document.getElementById('e-package').value||sales[idx].pkg,
+    duration:  document.getElementById('e-duration').value.trim(),
+    slots:     slots,
+    startDate: document.getElementById('e-start-date').value,
+    endDate:   document.getElementById('e-end-date').value,
+    amount:    amount,
+    payment:   payment,
+    agency:    payment==='Credit'?document.getElementById('e-agency').value.trim():'',
+    renewal:   editRenewal||'unknown',
+    notes:     document.getElementById('e-notes').value.trim(),
+    edited:    true
+  });
+  saveSales();
+  broadcast('NEW_SALE', { sale: sales[idx] });
+  closeEdit();
+  refreshAll();
+  toast('Sale updated!');
+}
+
+function renderAdmin() {
+  if (!isChairman()) return;
+  const totalRev   = sales.reduce((a,s)=>a+s.amount,0);
+  const totalDeals = sales.length;
+  const totalSlots = sales.reduce((a,s)=>a+s.slots,0);
+  document.getElementById('adm-total-rev').textContent   = '₦'+fmtMoney(totalRev);
+  document.getElementById('adm-total-deals').textContent = totalDeals;
+  document.getElementById('adm-total-slots').textContent = totalSlots;
+
+  const byM = {};
+  TEAM.forEach(m=>{ byM[m.id]={rev:0,deals:0,slots:0}; });
+  sales.forEach(s=>{ if(byM[s.sellerId]){ byM[s.sellerId].rev+=s.amount; byM[s.sellerId].deals++; byM[s.sellerId].slots+=s.slots; }});
+  const sorted = TEAM.filter(m=>m.id!=='emeka').sort((a,b)=>byM[b.id].rev-byM[a.id].rev);
+
+  document.getElementById('adm-team-breakdown').innerHTML = sorted.map(m=>{
+    const st = byM[m.id];
+    const pct = totalRev>0 ? Math.round((st.rev/totalRev)*100) : 0;
+    return `<div style="background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:50%;background:${m.color}22;display:flex;align-items:center;justify-content:center;font-size:18px">${m.emoji}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px;color:var(--text)">${m.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${m.role}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700;font-size:14px;color:${m.color}">₦${fmtMoney(st.rev)}</div>
+          <div style="font-size:11px;color:var(--muted)">${st.deals} deal${st.deals!==1?'s':''} &bull; ${st.slots} slots</div>
+        </div>
+      </div>
+      <div style="background:var(--border);border-radius:99px;height:6px;overflow:hidden">
+        <div style="background:${m.color};height:100%;width:${pct}%;border-radius:99px;transition:width .4s"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${pct}% of total revenue</div>
+    </div>`;
+  }).join('');
+
+  const txList = document.getElementById('adm-tx-list');
+  if (!sales.length) {
+    txList.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px 0;font-size:14px">No transactions yet</div>';
+    return;
+  }
+  txList.innerHTML = [...sales].sort((a,b)=>b.ts-a.ts).map(s=>{
+    const seller = TEAM.find(m=>m.id===s.sellerId)||{name:'Unknown',emoji:'?',color:'#888'};
+    const d = new Date(s.ts);
+    const timeStr = d.toLocaleDateString('en-NG',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+    return `<div style="background:var(--card);border-radius:14px;padding:12px 14px;border-left:4px solid ${seller.color};border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:16px">${seller.emoji}</span>
+        <span style="font-weight:700;font-size:13px;color:var(--text)">${seller.name}</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--muted)">${timeStr}</span>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px">${s.client}</div>
+      <div style="display:flex;gap:12px;font-size:12px;color:var(--muted)">
+        <span style="color:${seller.color};font-weight:700">₦${fmtMoney(s.amount)}</span>
+        <span>📦 ${s.slots} slot${s.slots!==1?'s':''}</span>
+        ${s.note?`<span>📋 ${s.note}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function switchToFeed() { showTab('feed'); }
+
+let selectedRenewal = '';
+function setRenewal(val) {
+  selectedRenewal = val;
+  ['yes','no','pending'].forEach(v => {
+    const lbl = document.getElementById('renew-'+v+'-lbl');
+    lbl.style.borderColor = v===val ? 'var(--accent)' : 'var(--border)';
+    lbl.style.background  = v===val ? 'rgba(79,142,247,0.1)' : 'var(--card)';
+  });
+}
+
+function submitSale() {
+  const client    = document.getElementById('f-client').value.trim();
+  const product   = document.getElementById('f-product').value.trim();
+  const pkg       = document.getElementById('f-package').value || 'General';
+  const duration  = document.getElementById('f-duration').value;
+  const slots     = parseInt(document.getElementById('f-slots').value);
+  const startDate = document.getElementById('f-start-date').value;
+  const endDate   = document.getElementById('f-end-date').value;
+  const amount    = parseFloat(document.getElementById('f-amount').value);
+  const payment   = document.getElementById('f-payment').value || 'Cash';
+  const agency    = payment==='Credit' ? document.getElementById('f-agency').value.trim() : '';
+  const renewal   = selectedRenewal || 'unknown';
+  const notes     = document.getElementById('f-notes').value.trim();
+  if (!client)              { toast('Please enter a client name'); return; }
+  if (!amount || amount<=0) { toast('Please enter a valid amount'); return; }
+  if (!slots  || slots<=0)  { toast('Please enter number of slots'); return; }
+  const sale = {
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    sellerId: currentUser.id, client, product, pkg, duration, slots,
+    startDate, endDate, amount, payment, agency, renewal, notes,
+    ts: Date.now(), isNew: true
+  };
+  sales.unshift(sale); saveSales(); broadcast('NEW_SALE', { sale });
+  ['f-client','f-product','f-notes','f-agency'].forEach(id => document.getElementById(id).value = '');
+  ['f-package','f-duration','f-payment'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-amount').value = '';
+  document.getElementById('f-slots').value  = '';
+  document.getElementById('f-start-date').value = '';
+  document.getElementById('f-end-date').value   = '';
+  document.getElementById('f-agency-wrap').style.display = 'none';
+  selectedRenewal = '';
+  ['yes','no','pending'].forEach(v => {
+    document.getElementById('renew-'+v+'-lbl').style.borderColor = 'var(--border)';
+    document.getElementById('renew-'+v+'-lbl').style.background  = 'var(--card)';
+    document.getElementById('renew-'+v).checked = false;
+  });
+  toast('₦' + fmtMoney(amount) + ' · ' + slots + ' slot' + (slots>1?'s':'') + ' posted!');
+  showTab('feed');
+  setTimeout(() => { const s = sales.find(x => x.id === sale.id); if(s) s.isNew = false; }, 5000);
+}
+
+function onPaymentChange() {
+  var val = document.getElementById('f-payment').value;
+  document.getElementById('f-agency-wrap').style.display = val==='Credit' ? 'block' : 'none';
+}
+
+function renderFeed() {
+  const el = document.getElementById('feed-list');
+  if (!sales.length) {
+    el.innerHTML = '<div class="empty-feed"><div class="empty-icon">\u{1F4ED}</div><div class="empty-title">No sales yet</div><div class="empty-sub">Tap <strong>Log Sale</strong> to post your first deal!</div></div>';
+    return;
+  }
+  el.innerHTML = sales.map(buildSaleCard).join('');
+}
+function buildSaleCard(s) {
+  const m    = TEAM.find(t => t.id === s.sellerId) || { name: s.sellerId, emoji: '\u{1F464}', color: '#888' };
+  const isMe = s.sellerId === currentUser?.id;
+
+  /* Rows tight at 17px — same fonts, less air */
+  const R = 'display:block;height:17px;line-height:17px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;';
+
+  const details   = [s.pkg, s.duration].filter(Boolean).map(v => esc(v)).join(' \u00B7 ');
+  const fmtDate = d => d ? d.split('-').reverse().join('-') : '?';
+  const dateStr   = (s.startDate||s.endDate) ? `\uD83D\uDCC5 ${fmtDate(s.startDate)} \u2192 ${fmtDate(s.endDate)}` : '\u00A0';
+  const noteStr   = s.notes ? `"${esc(s.notes)}"` : '\u00A0';
+  const detailStr = details || '\u00A0';
+  const clientStr = s.client ? `${esc(s.client)}${s.product?' \u00B7 '+esc(s.product):''}` : '\u00A0';
+
+  const renewIcon  = { yes:'\u2705', no:'\u274C', pending:'\u{1F550}' };
+  const renewColor = { yes:'var(--green)', no:'var(--red)', pending:'var(--yellow)' };
+  const renewStr   = (s.renewal&&s.renewal!=='unknown')
+    ? `<span style="color:${renewColor[s.renewal]}">${renewIcon[s.renewal]}</span>`
+    : `<span style="visibility:hidden">\u2705</span>`;
+
+  return `<div class="sale-card" style="border-left:3px solid ${m.color}">
+
+    <!-- badge row: always 16px -->
+    <div style="height:16px;display:flex;align-items:center;padding:0 10px">
+      ${s.isNew
+        ? `<span style="background:var(--green);color:#000;font-size:10px;font-weight:800;padding:0 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">New</span>`
+        : `<span style="visibility:hidden;font-size:10px;padding:0 6px">New</span>`}
+    </div>
+
+    <!-- body: avatar + left col + right col -->
+    <div style="display:flex;gap:8px;align-items:flex-start;padding:1px 10px 6px">
+
+      <div style="width:28px;height:28px;border-radius:50%;background:${m.color}22;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:1px">${m.emoji}</div>
+
+      <!-- left: 5 rows × 17px = 85px -->
+      <div style="flex:1;min-width:0">
+        <div style="${R}font-size:14px;font-weight:700;color:var(--text)">${m.name}${isMe?' <span style="color:var(--muted);font-weight:400;font-size:11px">(you)</span>':''}</div>
+        <div style="${R}font-size:13px;color:var(--text2)">${clientStr}</div>
+        <div style="${R}font-size:12px;color:var(--muted)">${detailStr}</div>
+        <div style="${R}font-size:12px;color:var(--muted);font-weight:600">${dateStr}</div>
+        <div style="${R}font-size:12px;color:var(--muted);font-style:italic;padding-left:5px;border-left:2px solid ${s.notes?'var(--accent)':'transparent'}">${noteStr}</div>
+      </div>
+
+      <!-- right: 6 items × 17px = 102px -->
+      <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0">
+        <div style="${R}font-size:11px;color:var(--muted)">${relTime(s.ts)}</div>
+        <div style="${R}font-size:14px;font-weight:800;color:var(--green)">&#8358;${fmtMoney(s.amount)}</div>
+        <div style="${R}font-size:12px;font-weight:600;color:var(--accent)">${s.slots} slot${s.slots!==1?'s':''}</div>
+        <div style="${R}font-size:12px">${renewStr}</div>
+        <div style="${R}font-size:11px;font-weight:700;color:var(--yellow)">${s.payment==='Credit'?'Credit':'<span style="visibility:hidden">-</span>'}</div>
+        <button onclick="${isMe?`openEdit('${s.id}')`:'void(0)'}"
+          style="height:17px;line-height:1;background:none;border:1px solid ${isMe?'var(--border)':'transparent'};color:${isMe?'var(--muted)':'transparent'};font-size:11px;font-weight:700;padding:0 7px;border-radius:4px;cursor:${isMe?'pointer':'default'}">&#9998; Edit</button>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function renderDash() {
+  const totalRev   = sales.reduce((a,s)=>a+s.amount,0);
+  const totalSlots = sales.reduce((a,s)=>a+s.slots,0);
+  const slotsLeft  = Math.max(0, TOTAL_SLOTS - totalSlots);
+  const today      = todayKey();
+  const todayRev   = sales.filter(s=>dayKey(s.ts)===today).reduce((a,s)=>a+s.amount,0);
+  const avgDeal    = sales.length ? totalRev/sales.length : 0;
+  const byM = {};
+  TEAM.forEach(m=>{ byM[m.id]={rev:0,deals:0,slots:0}; });
+  sales.forEach(s=>{ if(byM[s.sellerId]){ byM[s.sellerId].rev+=s.amount; byM[s.sellerId].deals++; byM[s.sellerId].slots+=s.slots; } });
+  const sorted = TEAM.filter(m=>m.id!=='emeka'&&m.id!=='sola').sort((a,b)=>byM[b.id].rev-byM[a.id].rev);
+  document.getElementById('db-slots-sold').textContent = totalSlots;
+  document.getElementById('db-slots-left').textContent = slotsLeft;
+  document.getElementById('db-deals').textContent = sales.length;
+  document.getElementById('db-revenue').textContent = '₦'+fmtMoney(totalRev);
+  document.getElementById('db-today').textContent = '₦'+fmtMoney(todayRev);
+  document.getElementById('db-top-seller').textContent = sorted[0]?sorted[0].emoji:'\u2014';
+  document.getElementById('db-avg').textContent = '₦'+fmtMoney(avgDeal);
+  const pct = Math.min(100, Math.round((todayRev/DAILY_TARGET)*100));
+  document.getElementById('progress-pct').textContent = pct+'%';
+  document.getElementById('progress-fill').style.width = pct+'%';
+  const maxRev = byM[sorted[0]?.id]?.rev||1;
+  document.getElementById('leader-list').innerHTML = sorted.map((m,i)=>{
+    const st=byM[m.id]; const bp=maxRev>0?Math.round((st.rev/maxRev)*100):0;
+    const medal = i===0?'\u{1F947}':i===1?'\u{1F948}':i===2?'\u{1F949}':(i+1);
+    const rc = i===0?'top1':i===1?'top2':i===2?'top3':'';
+    return `<div class="leader-item">
+      <div class="leader-rank ${rc}">${medal}</div>
+      <div class="leader-avatar" style="background:${m.color}22">${m.emoji}</div>
+      <div class="leader-info">
+        <div class="leader-name">${m.name}</div>
+        <div class="leader-deals">${st.deals} deal${st.deals!==1?'s':''} \u00B7 ${st.slots} slot${st.slots!==1?'s':''}</div>
+        <div class="leader-bar-wrap"><div class="leader-bar" style="width:${bp}%;background:${m.color}"></div></div>
+      </div>
+      <div class="leader-rev">₦${fmtMoney(st.rev)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTeam() {
+  const byM = {};
+  TEAM.forEach(m=>{ byM[m.id]={rev:0,deals:0,slots:0}; });
+  sales.forEach(s=>{ if(byM[s.sellerId]){ byM[s.sellerId].rev+=s.amount; byM[s.sellerId].deals++; byM[s.sellerId].slots+=s.slots; } });
+  const visibleTeam = TEAM.filter(m=>m.id!=='emeka'&&m.id!=='sola');
+  document.getElementById('team-cards').innerHTML = visibleTeam.map(m=>{
+    const st=byM[m.id]; const isMe=m.id===currentUser?.id;
+    return `<div class="team-card" style="border-left:3px solid ${m.color}">
+      <div class="team-avatar" style="background:${m.color}22">${m.emoji}</div>
+      <div class="team-info">
+        <div class="team-name-row"><span class="team-name">${m.name}${isMe?' <span style="color:var(--muted);font-size:12px;font-weight:400">(you)</span>':'' }</span><span class="online-badge">\u25CF Online</span></div>
+        <div class="team-role">${m.role}</div>
+        <div class="team-stats">
+          <div class="team-stat-item"><div class="team-stat-num" style="color:var(--green)">₦${fmtMoney(st.rev)}</div><div class="team-stat-lbl">Revenue</div></div>
+          <div class="team-stat-item"><div class="team-stat-num" style="color:var(--accent)">${st.deals}</div><div class="team-stat-lbl">Deals</div></div>
+          <div class="team-stat-item"><div class="team-stat-num" style="color:var(--yellow)">${st.slots}</div><div class="team-stat-lbl">Slots</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function refreshAll() {
+  if (typeof isChairman === 'function' && isChairman()) { renderAdmin(); renderReports(); return; } renderFeed(); renderDash(); renderTeam(); renderReports(); }
+function showNotifyDot()  { document.getElementById('notify-dot').classList.add('active'); }
+function clearNotifyDot() { document.getElementById('notify-dot').classList.remove('active'); }
+function showNewSalePopup(sale) {
+  const m = TEAM.find(t=>t.id===sale.sellerId);
+  if (!m || m.id===currentUser?.id) return;
+  const inner = document.getElementById('popup-inner');
+  inner.textContent = m.emoji+' '+m.name+' closed ₦'+fmtMoney(sale.amount)+' \u00B7 '+sale.slots+' slot'+(sale.slots>1?'s':'')+'! \u{1F389}';
+  inner.classList.add('show');
+  if (newSaleTimer) clearTimeout(newSaleTimer);
+  newSaleTimer = setTimeout(()=>inner.classList.remove('show'), 4000);
+}
+function toast(msg, dur) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), dur||2800);
+}
+
+function fmtMoney(n) {
+  if (!n||isNaN(n)) return '0';
+  if (n>=1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
+  if (n>=1000)    return (n/1000).toFixed(1).replace(/\.0$/,'')+'k';
+  return n.toFixed(2).replace(/\.00$/,'');
+}
+function relTime(ts) {
+  const d=Date.now()-ts;
+  if (d<60000)    return 'just now';
+  if (d<3600000)  return Math.floor(d/60000)+'m ago';
+  if (d<86400000) return Math.floor(d/3600000)+'h ago';
+  return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function todayKey() { return dayKey(Date.now()); }
+function dayKey(ts) { const d=new Date(ts); return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+init();
+
+// Register service worker for PWA / offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
