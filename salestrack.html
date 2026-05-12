@@ -67,6 +67,26 @@
   .btn-login.ready { opacity: 1; pointer-events: all; }
   .btn-login:active { transform: scale(0.98); }
   .demo-hint { font-size: 12px; color: var(--muted); margin-top: 16px; text-align: center; max-width: 280px; line-height: 1.5; }
+  .pin-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border); background: transparent;
+    transition: background .15s, border-color .15s;
+  }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-dot.error  { background: var(--red);    border-color: var(--red); }
+  .pin-pad {
+    display: grid; grid-template-columns: repeat(3, 72px);
+    gap: 12px;
+  }
+  .pin-key {
+    height: 72px; border-radius: 50%; background: var(--card);
+    border: 1.5px solid var(--border); color: var(--text);
+    font-size: 22px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: background .1s, transform .08s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pin-key:active { background: var(--accent); transform: scale(.93); }
+  .pin-del { font-size: 18px; }
 
   /* ── ROOT UPGRADES ── */
   :root {
@@ -397,8 +417,37 @@
     <div id="login-role" style="font-size:12px;color:var(--muted)"></div>
   </div>
 
+  <!-- PIN entry (shown when PIN is set) -->
+  <div id="pin-entry-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:300px">
+    <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px">Enter your 6-digit PIN</div>
+    <div id="pin-dots" style="display:flex;gap:12px;margin-bottom:24px">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+      <div class="pin-dot" id="pd4"></div>
+      <div class="pin-dot" id="pd5"></div>
+    </div>
+    <div id="pin-error" style="color:var(--red);font-size:12px;margin-bottom:12px;display:none">Wrong PIN. Try again.</div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinDigit(1)">1</button>
+      <button class="pin-key" onclick="pinDigit(2)">2</button>
+      <button class="pin-key" onclick="pinDigit(3)">3</button>
+      <button class="pin-key" onclick="pinDigit(4)">4</button>
+      <button class="pin-key" onclick="pinDigit(5)">5</button>
+      <button class="pin-key" onclick="pinDigit(6)">6</button>
+      <button class="pin-key" onclick="pinDigit(7)">7</button>
+      <button class="pin-key" onclick="pinDigit(8)">8</button>
+      <button class="pin-key" onclick="pinDigit(9)">9</button>
+      <div></div>
+      <button class="pin-key" onclick="pinDigit(0)">0</button>
+      <button class="pin-key pin-del" onclick="pinDelete()">&#9003;</button>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--muted)">Forgot PIN? <span onclick="showPasswordMode()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Use password</span></div>
+  </div>
+
   <!-- Password field -->
-  <div style="width:100%;max-width:340px;margin-bottom:16px">
+  <div id="pw-wrap" style="width:100%;max-width:340px;margin-bottom:16px">
     <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Password</div>
     <div style="position:relative">
       <input id="pw-input" type="password" placeholder="Enter your password"
@@ -413,6 +462,37 @@
   <button class="btn-login" id="btn-login" onclick="doLogin()">Enter Dashboard</button>
   <div class="demo-hint" style="margin-top:16px">Not you? <span onclick="clearDevice()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Change account</span></div>
   <div style="margin-top:24px;font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.5px">Powered by <span style="color:var(--accent);font-weight:700">Henry Ogun</span></div>
+
+  <!-- PIN Setup overlay (shown after first password login) -->
+  <div id="pin-setup-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px">
+    <div style="font-size:40px;margin-bottom:12px">&#128274;</div>
+    <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px" id="pin-setup-title">Set a 6-digit PIN</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;text-align:center" id="pin-setup-sub">Create a PIN for faster login next time</div>
+    <div id="pin-setup-dots" style="display:flex;gap:12px;margin-bottom:24px">
+      <div class="pin-dot" id="spd0"></div>
+      <div class="pin-dot" id="spd1"></div>
+      <div class="pin-dot" id="spd2"></div>
+      <div class="pin-dot" id="spd3"></div>
+      <div class="pin-dot" id="spd4"></div>
+      <div class="pin-dot" id="spd5"></div>
+    </div>
+    <div id="pin-setup-error" style="color:var(--red);font-size:12px;margin-bottom:12px;display:none">PINs don't match. Try again.</div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="setupPinDigit(1)">1</button>
+      <button class="pin-key" onclick="setupPinDigit(2)">2</button>
+      <button class="pin-key" onclick="setupPinDigit(3)">3</button>
+      <button class="pin-key" onclick="setupPinDigit(4)">4</button>
+      <button class="pin-key" onclick="setupPinDigit(5)">5</button>
+      <button class="pin-key" onclick="setupPinDigit(6)">6</button>
+      <button class="pin-key" onclick="setupPinDigit(7)">7</button>
+      <button class="pin-key" onclick="setupPinDigit(8)">8</button>
+      <button class="pin-key" onclick="setupPinDigit(9)">9</button>
+      <div></div>
+      <button class="pin-key" onclick="setupPinDigit(0)">0</button>
+      <button class="pin-key pin-del" onclick="setupPinDelete()">&#9003;</button>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--muted)"><span onclick="skipPinSetup()" style="color:var(--muted);cursor:pointer;text-decoration:underline">Skip for now</span></div>
+  </div>
 </div>
 
 <!-- keep screen-setup div so JS references don't break, hidden -->
@@ -855,11 +935,18 @@ function showLoginFor(memberId) {
   const card = document.getElementById('login-member-card');
   card.style.borderColor = m.color;
   card.style.boxShadow   = '0 0 0 3px '+m.color+'33';
+  card.style.display = 'flex';
+  document.getElementById('login-select-wrap').style.display = 'none';
   document.getElementById('pw-input').value = '';
   document.getElementById('pw-error').style.display = 'none';
   document.getElementById('btn-login').classList.remove('ready');
   document.getElementById('screen-login').classList.add('active');
-  setTimeout(()=>document.getElementById('pw-input').focus(), 300);
+  if (getPin(memberId)) {
+    showPinMode();
+  } else {
+    showPasswordMode();
+    setTimeout(()=>document.getElementById('pw-input').focus(), 300);
+  }
 }
 
 function clearDevice() {
@@ -912,6 +999,114 @@ function togglePw() {
   if (inp.type === 'password') { inp.type = 'text'; tog.textContent = '\uD83D\uDE48'; }
   else { inp.type = 'password'; tog.textContent = '\uD83D\uDC41\uFE0F'; }
 }
+// ── PIN logic ──────────────────────────────────────────────
+const PIN_KEY = id => 'salestrack_pin_' + id;
+let pinBuffer = '', pinMode = false;
+let setupBuffer = '', setupFirstPin = '', setupStage = 0; // 0=enter, 1=confirm
+
+function getPin(id) { return localStorage.getItem(PIN_KEY(id)); }
+function savePin(id, pin) { localStorage.setItem(PIN_KEY(id), pin); }
+function clearPin(id) { localStorage.removeItem(PIN_KEY(id)); }
+
+function updateDots(prefix, count, err) {
+  for (let i = 0; i < 6; i++) {
+    const d = document.getElementById(prefix + i);
+    if (!d) continue;
+    d.className = 'pin-dot' + (i < count ? (err ? ' error' : ' filled') : '');
+  }
+}
+
+// ── PIN entry (login) ───────────────────────────────────────
+function showPinMode() {
+  pinBuffer = ''; pinMode = true;
+  updateDots('pd', 0);
+  document.getElementById('pin-entry-wrap').style.display = 'flex';
+  document.getElementById('pw-wrap').style.display = 'none';
+  document.getElementById('btn-login').style.display = 'none';
+  document.getElementById('pin-error').style.display = 'none';
+}
+function showPasswordMode() {
+  pinMode = false;
+  document.getElementById('pin-entry-wrap').style.display = 'none';
+  document.getElementById('pw-wrap').style.display = '';
+  document.getElementById('btn-login').style.display = '';
+  document.getElementById('pw-input').focus();
+}
+function pinDigit(d) {
+  if (pinBuffer.length >= 6) return;
+  pinBuffer += d;
+  updateDots('pd', pinBuffer.length);
+  if (pinBuffer.length === 6) setTimeout(verifyPin, 120);
+}
+function pinDelete() {
+  if (!pinBuffer.length) return;
+  pinBuffer = pinBuffer.slice(0, -1);
+  updateDots('pd', pinBuffer.length);
+}
+function verifyPin() {
+  const stored = getPin(selectedMemberId);
+  if (pinBuffer === stored) {
+    currentUser = TEAM.find(m => m.id === selectedMemberId);
+    localStorage.setItem('salestrack_user', currentUser.id);
+    localStorage.setItem(DEVICE_KEY, currentUser.id);
+    enterApp();
+  } else {
+    updateDots('pd', 6, true);
+    document.getElementById('pin-error').style.display = 'block';
+    setTimeout(() => { pinBuffer = ''; updateDots('pd', 0); document.getElementById('pin-error').style.display = 'none'; }, 1000);
+  }
+}
+
+// ── PIN setup (after first password login) ─────────────────
+function promptPinSetup() {
+  setupBuffer = ''; setupFirstPin = ''; setupStage = 0;
+  updateDots('spd', 0);
+  document.getElementById('pin-setup-title').textContent = 'Set a 6-digit PIN';
+  document.getElementById('pin-setup-sub').textContent = 'Create a PIN for faster login next time';
+  document.getElementById('pin-setup-error').style.display = 'none';
+  const ov = document.getElementById('pin-setup-overlay');
+  ov.style.display = 'flex';
+}
+function setupPinDigit(d) {
+  if (setupBuffer.length >= 6) return;
+  setupBuffer += d;
+  updateDots('spd', setupBuffer.length);
+  if (setupBuffer.length === 6) setTimeout(setupPinNext, 120);
+}
+function setupPinDelete() {
+  if (!setupBuffer.length) return;
+  setupBuffer = setupBuffer.slice(0, -1);
+  updateDots('spd', setupBuffer.length);
+}
+function setupPinNext() {
+  if (setupStage === 0) {
+    setupFirstPin = setupBuffer;
+    setupBuffer = '';
+    setupStage = 1;
+    updateDots('spd', 0);
+    document.getElementById('pin-setup-title').textContent = 'Confirm your PIN';
+    document.getElementById('pin-setup-sub').textContent = 'Enter the same 6-digit PIN again';
+  } else {
+    if (setupBuffer === setupFirstPin) {
+      savePin(currentUser.id, setupBuffer);
+      document.getElementById('pin-setup-overlay').style.display = 'none';
+    } else {
+      updateDots('spd', 6, true);
+      document.getElementById('pin-setup-error').style.display = 'block';
+      setTimeout(() => {
+        setupBuffer = ''; setupFirstPin = ''; setupStage = 0;
+        updateDots('spd', 0);
+        document.getElementById('pin-setup-error').style.display = 'none';
+        document.getElementById('pin-setup-title').textContent = 'Set a 6-digit PIN';
+        document.getElementById('pin-setup-sub').textContent = 'Create a PIN for faster login next time';
+      }, 1000);
+    }
+  }
+}
+function skipPinSetup() {
+  document.getElementById('pin-setup-overlay').style.display = 'none';
+}
+
 function doLogin() {
   if (!selectedMemberId) return;
   const member = TEAM.find(m => m.id === selectedMemberId);
@@ -929,6 +1124,7 @@ function doLogin() {
   localStorage.setItem('salestrack_user', currentUser.id);
   localStorage.setItem(DEVICE_KEY, currentUser.id);
   enterApp();
+  if (!getPin(currentUser.id)) setTimeout(promptPinSetup, 600);
 }
 function isChairman() { return currentUser && currentUser.id === 'emeka'; }
 
