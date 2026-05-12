@@ -905,6 +905,7 @@ function setupChannel() {
             refreshAll(); showNewSalePopup(s); showNotifyDot();
           }
         }
+      } else if (e.data.type === 'DELETE_SALE') { sales = sales.filter(function(s){return s.id!==e.data.id;}); saveSalesLocal(); refreshAll();
       } else if (e.data.type === 'CLEAR') { sales = []; saveSalesLocal(); refreshAll(); }
     };
   }
@@ -1308,6 +1309,15 @@ function exportCSV(period) {
 var editingId = null;
 var editRenewal = '';
 
+function deleteSale(id) {
+  if (!confirm('Delete this sale? This cannot be undone.')) return;
+  sales = sales.filter(function(s){ return s.id !== id; });
+  saveSales();
+  broadcast('DELETE_SALE', { id: id });
+  refreshAll();
+  toast('Sale deleted');
+}
+
 function openEdit(id) {
   var s = sales.find(function(x){return x.id===id;});
   if (!s) return;
@@ -1562,8 +1572,12 @@ function buildSaleCard(s) {
         <div style="${R}font-size:12px;font-weight:600;color:var(--accent)">${s.slots} slot${s.slots!==1?'s':''}</div>
         <div style="${R}font-size:12px">${renewStr}</div>
         <div style="${R}font-size:11px;font-weight:700;color:var(--yellow)">${s.payment==='Credit'?'Credit':'<span style="visibility:hidden">-</span>'}</div>
-        <button onclick="${isMe?`openEdit('${s.id}')`:'void(0)'}"
-          style="height:17px;line-height:1;background:none;border:1px solid ${isMe?'var(--border)':'transparent'};color:${isMe?'var(--muted)':'transparent'};font-size:11px;font-weight:700;padding:0 7px;border-radius:4px;cursor:${isMe?'pointer':'default'}">&#9998; Edit</button>
+        <div style="display:flex;gap:4px;margin-top:1px">
+          <button onclick="${isMe?`openEdit('${s.id}')`:'void(0)'}"
+            style="height:17px;line-height:1;background:none;border:1px solid ${isMe?'var(--border)':'transparent'};color:${isMe?'var(--muted)':'transparent'};font-size:11px;font-weight:700;padding:0 7px;border-radius:4px;cursor:${isMe?'pointer':'default'}">&#9998; Edit</button>
+          <button onclick="${isMe?`deleteSale('${s.id}')`:'void(0)'}"
+            style="height:17px;line-height:1;background:none;border:1px solid ${isMe?'var(--red)':'transparent'};color:${isMe?'var(--red)':'transparent'};font-size:11px;font-weight:700;padding:0 7px;border-radius:4px;cursor:${isMe?'pointer':'default'}">&#128465;</button>
+        </div>
       </div>
 
     </div>
