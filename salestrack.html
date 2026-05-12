@@ -381,9 +381,18 @@
   <div class="login-title">SalesTrack</div>
   <div class="login-sub">Marketing Team &middot; Real-time Sales Board</div>
 
+  <!-- Member selector (shown when no device set) -->
+  <div id="login-select-wrap" style="width:100%;max-width:340px;margin-bottom:16px;display:none">
+    <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Who are you?</div>
+    <select id="member-select" onchange="onMemberSelect()"
+      style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:15px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer">
+      <option value="">-- Select your name --</option>
+    </select>
+  </div>
+
   <!-- Single-member card shown after device is set up -->
-  <div id="login-member-card" style="background:var(--card);border:2px solid var(--border);border-radius:18px;padding:24px 28px;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:280px;margin-bottom:24px">
-    <div id="login-avatar" style="font-size:48px;line-height:1"></div>
+  <div id="login-member-card" style="background:var(--card);border:2px solid var(--border);border-radius:18px;padding:20px 28px;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;max-width:280px;margin-bottom:20px">
+    <div id="login-avatar" style="font-size:44px;line-height:1"></div>
     <div id="login-name" style="font-size:18px;font-weight:700;color:var(--text)"></div>
     <div id="login-role" style="font-size:12px;color:var(--muted)"></div>
   </div>
@@ -406,14 +415,8 @@
   <div style="margin-top:24px;font-size:11px;color:var(--muted);text-align:center;letter-spacing:0.5px">Powered by <span style="color:var(--accent);font-weight:700">Henry Ogun</span></div>
 </div>
 
-<!-- DEVICE SETUP (first-time only) -->
-<div class="screen" id="screen-setup" style="align-items:center;justify-content:center;background:linear-gradient(160deg,#0d0d1a 0%,#1a1a3e 100%);padding:32px 24px">
-  <div class="login-logo">&#128202;</div>
-  <div class="login-title">SalesTrack</div>
-  <div class="login-sub" style="margin-bottom:28px">Who is using this phone?</div>
-  <div class="member-grid" id="member-grid"></div>
-  <button class="btn-login" id="btn-setup" onclick="confirmSetup()" style="margin-top:8px">Set as My Device</button>
-</div>
+<!-- keep screen-setup div so JS references don't break, hidden -->
+<div class="screen" id="screen-setup" style="display:none"></div>
 
 <!-- APP -->
 <div class="screen" id="screen-app">
@@ -774,8 +777,7 @@ function init() {
   if (device) {
     showLoginFor(device);
   } else {
-    buildLoginGrid();
-    document.getElementById('screen-setup').classList.add('active');
+    showSelectScreen();
   }
 }
 // ── Local fallback (used when Firebase is not configured) ──
@@ -856,7 +858,6 @@ function showLoginFor(memberId) {
   document.getElementById('pw-input').value = '';
   document.getElementById('pw-error').style.display = 'none';
   document.getElementById('btn-login').classList.remove('ready');
-  document.getElementById('screen-setup').classList.remove('active');
   document.getElementById('screen-login').classList.add('active');
   setTimeout(()=>document.getElementById('pw-input').focus(), 300);
 }
@@ -865,34 +866,41 @@ function clearDevice() {
   localStorage.removeItem(DEVICE_KEY);
   localStorage.removeItem('salestrack_user');
   currentUser = null; selectedMemberId = null;
-  document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-app').classList.remove('active');
-  buildLoginGrid();
-  document.getElementById('screen-setup').classList.add('active');
+  showSelectScreen();
 }
 
-function buildLoginGrid() {
-  document.getElementById('member-grid').innerHTML = TEAM.map(m =>
-    `<div class="member-card" id="lc-${m.id}" style="--member-color:${m.color}" onclick="selectMember('${m.id}')">
-      <div class="member-avatar">${m.emoji}</div>
-      <div class="member-name">${m.name}</div>
-      <div class="member-role">${m.role}</div>
-    </div>`
-  ).join('');
-}
-function confirmSetup() {
-  if (!selectedMemberId) return;
-  localStorage.setItem(DEVICE_KEY, selectedMemberId);
-  showLoginFor(selectedMemberId);
+function showSelectScreen() {
+  // populate dropdown
+  const sel = document.getElementById('member-select');
+  sel.innerHTML = '<option value="">-- Select your name --</option>' +
+    TEAM.map(m => `<option value="${m.id}">${m.emoji} ${m.name}</option>`).join('');
+  sel.value = '';
+  document.getElementById('login-select-wrap').style.display = '';
+  document.getElementById('login-member-card').style.display = 'none';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  document.getElementById('btn-login').classList.remove('ready');
+  document.getElementById('screen-login').classList.add('active');
 }
 
-function selectMember(id) {
+function onMemberSelect() {
+  const id = document.getElementById('member-select').value;
+  if (!id) return;
   selectedMemberId = id;
-  document.querySelectorAll('.member-card').forEach(card => card.classList.remove('selected'));
-  const mc = document.getElementById('lc-' + id);
-  if (mc) mc.classList.add('selected');
-  document.getElementById('btn-setup').classList.add('ready');
+  const m = TEAM.find(t => t.id === id);
+  document.getElementById('login-avatar').textContent = m.emoji;
+  document.getElementById('login-name').textContent = m.name;
+  document.getElementById('login-role').textContent = m.role;
+  document.getElementById('login-member-card').style.display = 'flex';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('btn-login').classList.remove('ready');
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
 }
+
+function buildLoginGrid() {} // kept for compatibility
+function confirmSetup() {}
+function selectMember(id) {}
 function onPwInput() {
   const val = document.getElementById('pw-input').value;
   document.getElementById('btn-login').classList.toggle('ready', val.length > 0);
