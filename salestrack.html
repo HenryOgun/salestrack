@@ -537,20 +537,17 @@
   <div class="page" id="page-dash">
     <div class="dash-header">Dashboard</div>
     <div class="slot-banner">
-      <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-sold" style="color:var(--accent)">0</div><div class="slot-banner-lbl">Slots Sold</div></div>
+      <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-sold" style="color:var(--accent)">0</div><div class="slot-banner-lbl">My Slots</div></div>
       <div class="slot-divider"></div>
-      <div class="slot-banner-item"><div class="slot-banner-num" id="db-deals" style="color:var(--green)">0</div><div class="slot-banner-lbl">Total Deals</div></div>
+      <div class="slot-banner-item"><div class="slot-banner-num" id="db-deals" style="color:var(--green)">0</div><div class="slot-banner-lbl">My Deals</div></div>
     </div>
     <div class="stats-row">
-      <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-icon">&#128176;</div><div class="stat-val" id="db-revenue">&#8358;0</div><div class="stat-lbl">Total Revenue</div></div>
-      <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">&#8358;0</div><div class="stat-lbl">Today</div></div>
+      <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-icon">&#128176;</div><div class="stat-val" id="db-revenue">&#8358;0</div><div class="stat-lbl">My Revenue</div></div>
+      <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">&#8358;0</div><div class="stat-lbl">My Today</div></div>
       <div class="stat-card" style="--stat-color:var(--purple)"><div class="stat-icon">&#127942;</div><div class="stat-val" id="db-top-seller">&mdash;</div><div class="stat-lbl">Top Seller</div></div>
-      <div class="stat-card" style="--stat-color:var(--yellow)"><div class="stat-icon">&#128230;</div><div class="stat-val" id="db-avg">&#8358;0</div><div class="stat-lbl">Avg Deal</div></div>
+      <div class="stat-card" style="--stat-color:var(--yellow)"><div class="stat-icon">&#128230;</div><div class="stat-val" id="db-avg">&#8358;0</div><div class="stat-lbl">My Avg Deal</div></div>
     </div>
-    <div class="progress-card">
-      <div class="progress-label"><span>Today's Target (&#8358;50k)</span><span id="progress-pct">0%</span></div>
-      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-    </div>
+
     <div class="section-title">Leaderboard</div>
     <div class="leader-list" id="leader-list"></div>
   </div>
@@ -1557,24 +1554,23 @@ function buildSaleCard(s) {
 }
 
 function renderDash() {
-  const totalRev   = sales.reduce((a,s)=>a+s.amount,0);
-  const totalSlots = sales.reduce((a,s)=>a+s.slots,0);
+  const uid = currentUser?.id;
+  const mySales    = sales.filter(s=>s.sellerId===uid);
+  const myRev      = mySales.reduce((a,s)=>a+s.amount,0);
+  const mySlots    = mySales.reduce((a,s)=>a+s.slots,0);
   const today      = todayKey();
-  const todayRev   = sales.filter(s=>dayKey(s.ts)===today).reduce((a,s)=>a+s.amount,0);
-  const avgDeal    = sales.length ? totalRev/sales.length : 0;
+  const myTodayRev = mySales.filter(s=>dayKey(s.ts)===today).reduce((a,s)=>a+s.amount,0);
+  const myAvg      = mySales.length ? myRev/mySales.length : 0;
   const byM = {};
   TEAM.forEach(m=>{ byM[m.id]={rev:0,deals:0,slots:0}; });
   sales.forEach(s=>{ if(byM[s.sellerId]){ byM[s.sellerId].rev+=s.amount; byM[s.sellerId].deals++; byM[s.sellerId].slots+=s.slots; } });
   const sorted = TEAM.filter(m=>m.id!=='emeka'&&m.id!=='sola').sort((a,b)=>byM[b.id].rev-byM[a.id].rev);
-  document.getElementById('db-slots-sold').textContent = totalSlots;
-  document.getElementById('db-deals').textContent = sales.length;
-  document.getElementById('db-revenue').textContent = '₦'+fmtMoney(totalRev);
-  document.getElementById('db-today').textContent = '₦'+fmtMoney(todayRev);
+  document.getElementById('db-slots-sold').textContent = mySlots;
+  document.getElementById('db-deals').textContent = mySales.length;
+  document.getElementById('db-revenue').textContent = '\u20A6'+fmtMoney(myRev);
+  document.getElementById('db-today').textContent = '\u20A6'+fmtMoney(myTodayRev);
   document.getElementById('db-top-seller').textContent = sorted[0]?sorted[0].emoji:'\u2014';
-  document.getElementById('db-avg').textContent = '₦'+fmtMoney(avgDeal);
-  const pct = Math.min(100, Math.round((todayRev/DAILY_TARGET)*100));
-  document.getElementById('progress-pct').textContent = pct+'%';
-  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('db-avg').textContent = '\u20A6'+fmtMoney(myAvg);
   const maxRev = byM[sorted[0]?.id]?.rev||1;
   document.getElementById('leader-list').innerHTML = sorted.map((m,i)=>{
     const st=byM[m.id]; const bp=maxRev>0?Math.round((st.rev/maxRev)*100):0;
