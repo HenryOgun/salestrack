@@ -456,8 +456,6 @@
     <div class="slot-banner">
       <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-sold" style="color:var(--accent)">0</div><div class="slot-banner-lbl">Slots Sold</div></div>
       <div class="slot-divider"></div>
-      <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-left" style="color:var(--yellow)">100</div><div class="slot-banner-lbl">Slots Left</div></div>
-      <div class="slot-divider"></div>
       <div class="slot-banner-item"><div class="slot-banner-num" id="db-deals" style="color:var(--green)">0</div><div class="slot-banner-lbl">Total Deals</div></div>
     </div>
     <div class="stats-row">
@@ -741,7 +739,7 @@ const TEAM = [
   { id: 'sola',  name: 'Admin',  role: 'Business Dev',  pass: 'admin2025',  emoji: '\u{1F9D1}\u{1F3FD}\u200D\u{1F4BC}', color: '#1abc9c' },
 ];
 const DAILY_TARGET = 50000;
-const TOTAL_SLOTS  = 100;
+
 const STORAGE_KEY  = 'salestrack_sales_v1';
 const CHANNEL_NAME = 'salestrack_sync';
 
@@ -1359,7 +1357,6 @@ function buildSaleCard(s) {
 function renderDash() {
   const totalRev   = sales.reduce((a,s)=>a+s.amount,0);
   const totalSlots = sales.reduce((a,s)=>a+s.slots,0);
-  const slotsLeft  = Math.max(0, TOTAL_SLOTS - totalSlots);
   const today      = todayKey();
   const todayRev   = sales.filter(s=>dayKey(s.ts)===today).reduce((a,s)=>a+s.amount,0);
   const avgDeal    = sales.length ? totalRev/sales.length : 0;
@@ -1368,7 +1365,6 @@ function renderDash() {
   sales.forEach(s=>{ if(byM[s.sellerId]){ byM[s.sellerId].rev+=s.amount; byM[s.sellerId].deals++; byM[s.sellerId].slots+=s.slots; } });
   const sorted = TEAM.filter(m=>m.id!=='emeka'&&m.id!=='sola').sort((a,b)=>byM[b.id].rev-byM[a.id].rev);
   document.getElementById('db-slots-sold').textContent = totalSlots;
-  document.getElementById('db-slots-left').textContent = slotsLeft;
   document.getElementById('db-deals').textContent = sales.length;
   document.getElementById('db-revenue').textContent = '₦'+fmtMoney(totalRev);
   document.getElementById('db-today').textContent = '₦'+fmtMoney(todayRev);
