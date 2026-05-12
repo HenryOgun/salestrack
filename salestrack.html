@@ -1664,7 +1664,7 @@ function showNewSalePopup(sale) {
   // System push notification (works when app is in background)
   if ('Notification' in window && Notification.permission === 'granted') {
     const title = '\u{1F4B0} New Sale — ' + m.name;
-    const body  = (sale.client||'Client') + ' \u00B7 ' + (sale.pkg||'') + ' \u00B7 \u20A6' + fmtMoney(sale.amount) + ' (' + sale.slots + ' slot' + (sale.slots>1?'s':'') + ')';
+    const body  = 'just logged a new sale';
     try {
       const n = new Notification(title, { body, icon: './icon-192.png', badge: './icon-192.png', tag: sale.id, renotify: true });
       n.onclick = function() { window.focus(); switchToFeed(); n.close(); };
