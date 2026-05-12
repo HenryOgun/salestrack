@@ -1349,6 +1349,18 @@ function deleteSale(id) {
   toast('Sale deleted');
 }
 
+function markPaid(id) {
+  var s = sales.find(function(x){ return x.id===id; });
+  if (!s) return;
+  var type = confirm('Mark as Cash payment?\nCancel to mark as Transfer instead.');
+  s.payment = type ? 'Cash' : 'Transfer';
+  s.edited = true;
+  saveSales();
+  broadcast('NEW_SALE', { sale: s });
+  refreshAll();
+  toast('Marked as ' + s.payment + ' ✔');
+}
+
 function openEdit(id) {
   var s = sales.find(function(x){return x.id===id;});
   if (!s) return;
@@ -1602,7 +1614,13 @@ function buildSaleCard(s) {
         <div style="${R}font-size:14px;font-weight:800;color:var(--green)">&#8358;${fmtMoney(s.amount)}</div>
         <div style="${R}font-size:12px;font-weight:600;color:var(--accent)">${s.slots} slot${s.slots!==1?'s':''}</div>
         <div style="${R}font-size:12px">${renewStr}</div>
-        <div style="${R}font-size:11px;font-weight:700;color:var(--yellow)">${s.payment==='Credit'?'Credit':'<span style="visibility:hidden">-</span>'}</div>
+        <div style="${R}font-size:11px;font-weight:700">
+          ${s.payment==='Credit' && isMe
+            ? `<button onclick="markPaid('${s.id}')" style="height:16px;line-height:1;background:rgba(240,180,41,0.15);border:1px solid rgba(240,180,41,0.4);color:var(--yellow);font-size:10px;font-weight:700;padding:0 7px;border-radius:4px;cursor:pointer">CREDIT · Tap to Pay</button>`
+            : s.payment==='Credit'
+              ? `<span style="color:var(--yellow)">Credit</span>`
+              : `<span style="visibility:hidden">-</span>`}
+        </div>
         <div style="display:flex;gap:4px;margin-top:1px">
           <button onclick="${isMe?`openEdit('${s.id}')`:'void(0)'}"
             style="height:17px;line-height:1;background:none;border:1px solid ${isMe?'var(--border)':'transparent'};color:${isMe?'var(--muted)':'transparent'};font-size:11px;font-weight:700;padding:0 7px;border-radius:4px;cursor:${isMe?'pointer':'default'}">&#9998; Edit</button>
@@ -1751,8 +1769,7 @@ function unlockCheck() {
 document.addEventListener('visibilitychange', function() {
   if (document.hidden) { lockApp(); } else { unlockCheck(); }
 });
-window.addEventListener('blur',     lockApp);
-window.addEventListener('focus',    unlockCheck);
+// Only lock on true app hide (home button, power button, switch app)
 window.addEventListener('pagehide', lockApp);
 window.addEventListener('pageshow', function(e) { if (!e.persisted) return; unlockCheck(); });
 
