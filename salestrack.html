@@ -1679,6 +1679,80 @@ function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 init();
 
+
+// ── App lock on background ──────────────────────────────────
+let lockBuffer = '';
+let appWasLocked = false;
+
+function lockApp() {
+  const appActive = document.getElementById('screen-app').classList.contains('active');
+  if (appActive && currentUser && getPin(currentUser.id)) {
+    appWasLocked = true;
+  }
+}
+
+function unlockCheck() {
+  if (appWasLocked && currentUser) {
+    appWasLocked = false;
+    showLockScreen();
+  }
+}
+
+// Power button, home button, app switch — all trigger visibilitychange
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) { lockApp(); } else { unlockCheck(); }
+});
+window.addEventListener('blur',     lockApp);
+window.addEventListener('focus',    unlockCheck);
+window.addEventListener('pagehide', lockApp);
+window.addEventListener('pageshow', function(e) { if (!e.persisted) return; unlockCheck(); });
+
+function showLockScreen() {
+  lockBuffer = '';
+  updateDots('ld', 0);
+  document.getElementById('lock-avatar').textContent = currentUser.emoji;
+  document.getElementById('lock-name').textContent   = currentUser.name;
+  document.getElementById('lock-error').style.display = 'none';
+  document.getElementById('pin-lock-overlay').style.display = 'flex';
+}
+
+function lockDigit(d) {
+  if (lockBuffer.length >= 6) return;
+  lockBuffer += d;
+  updateDots('ld', lockBuffer.length);
+  if (lockBuffer.length === 6) setTimeout(verifyLockPin, 120);
+}
+
+function lockDelete() {
+  if (!lockBuffer.length) return;
+  lockBuffer = lockBuffer.slice(0, -1);
+  updateDots('ld', lockBuffer.length);
+}
+
+function verifyLockPin() {
+  if (lockBuffer === getPin(currentUser.id)) {
+    document.getElementById('pin-lock-overlay').style.display = 'none';
+    lockBuffer = '';
+  } else {
+    updateDots('ld', 6, true);
+    document.getElementById('lock-error').style.display = 'block';
+    setTimeout(function() {
+      lockBuffer = '';
+      updateDots('ld', 0);
+      document.getElementById('lock-error').style.display = 'none';
+    }, 1000);
+  }
+}
+
+function lockUsePassword() {
+  document.getElementById('pin-lock-overlay').style.display = 'none';
+  localStorage.removeItem('salestrack_user');
+  currentUser = null;
+  document.getElementById('screen-app').classList.remove('active');
+  var device = localStorage.getItem(DEVICE_KEY);
+  if (device) { showLoginFor(device); } else { showSelectScreen(); }
+}
+
 // Register service worker for PWA / offline support
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
