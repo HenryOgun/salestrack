@@ -927,6 +927,7 @@ function doLogin() {
   }
   currentUser = member;
   localStorage.setItem('salestrack_user', currentUser.id);
+  localStorage.setItem(DEVICE_KEY, currentUser.id);
   enterApp();
 }
 function isChairman() { return currentUser && currentUser.id === 'emeka'; }
