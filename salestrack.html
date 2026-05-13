@@ -409,6 +409,14 @@
     box-shadow: 0 3px 14px rgba(78,127,255,0.35);
   }
 
+
+  .ds-row {
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding:12px 0;border-bottom:1px solid var(--border);gap:12px;
+  }
+  .ds-row:last-child { border-bottom:none; }
+  .ds-label { font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;flex-shrink:0;padding-top:1px; }
+  .ds-val { font-size:14px;font-weight:600;color:var(--text);text-align:right;word-break:break-word; }
   ::-webkit-scrollbar { width: 2px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(78,127,255,0.2); border-radius: 2px; }
@@ -1585,7 +1593,7 @@ function buildSaleCard(s) {
     ? `<span style="color:${renewColor[s.renewal]}">${renewIcon[s.renewal]}</span>`
     : `<span style="visibility:hidden">\u2705</span>`;
 
-  return `<div class="sale-card" style="border-left:3px solid ${m.color}">
+  return `<div class="sale-card" style="border-left:3px solid ${m.color};cursor:pointer" onclick="openDetail('${s.id}',event)">
 
     <!-- badge row: always 16px -->
     <div style="height:16px;display:flex;align-items:center;padding:0 10px">
@@ -1744,6 +1752,56 @@ function todayKey() { return dayKey(Date.now()); }
 function dayKey(ts) { const d=new Date(ts); return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+
+// ── Sale Detail Sheet ───────────────────────────────────────
+function openDetail(id, e) {
+  // Don't open if tapping a button inside the card
+  if (e && e.target && (e.target.tagName === 'BUTTON' || e.target.closest('button'))) return;
+  const s = sales.find(x => x.id === id);
+  if (!s) return;
+  const m = TEAM.find(t => t.id === s.sellerId) || { name: s.sellerId, emoji: '\u{1F464}', color: '#888' };
+  const fmtDate = d => d ? d.split('-').reverse().join('-') : '—';
+  const renewLabel = { yes: '\u2705 Renewing', no: '\u26D4 Not Renewing', pending: '\u{1F550} Pending' };
+  const payColor = s.payment === 'Credit' ? 'var(--yellow)' : s.payment === 'Cash' ? 'var(--green)' : 'var(--accent)';
+
+  document.getElementById('ds-title').innerHTML =
+    `<span style="margin-right:8px">${m.emoji}</span>${m.name}`;
+
+  const rows = [
+    ['Client',    esc(s.client || '—')],
+    ['Brand',     esc(s.product || '—')],
+    ['Ad Type',   esc(s.pkg || '—')],
+    ['Duration',  esc(s.duration || '—')],
+    ['Slots',     s.slots],
+    ['Start Date',fmtDate(s.startDate)],
+    ['End Date',  fmtDate(s.endDate)],
+    ['Amount',    '<span style="color:var(--green);font-weight:800">\u20A6' + fmtMoney(s.amount) + '</span>'],
+    ['Payment',   `<span style="color:${payColor};font-weight:700">${s.payment || 'Cash'}</span>`],
+    s.payment === 'Credit' ? ['Agency', esc(s.agency || '—')] : null,
+    ['Renewal',   renewLabel[s.renewal] || '—'],
+    s.notes ? ['Notes', `<em style="color:var(--text2)">"${esc(s.notes)}"</em>`] : null,
+    ['Logged',    relTime(s.ts)],
+  ].filter(Boolean);
+
+  document.getElementById('detail-body').innerHTML = rows.map(([lbl, val]) =>
+    `<div class="ds-row"><span class="ds-label">${lbl}</span><span class="ds-val">${val}</span></div>`
+  ).join('');
+
+  document.getElementById('detail-overlay').style.display = 'block';
+  const sheet = document.getElementById('detail-sheet');
+  sheet.style.display = 'block';
+  requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
+}
+
+function closeDetail() {
+  const sheet = document.getElementById('detail-sheet');
+  sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => {
+    sheet.style.display = 'none';
+    document.getElementById('detail-overlay').style.display = 'none';
+  }, 320);
+}
+
 init();
 
 
@@ -1856,6 +1914,19 @@ if ('serviceWorker' in navigator) {
     <button class="pin-key pin-del" onclick="lockDelete()">&#9003;</button>
   </div>
   <div style="margin-top:16px;font-size:12px;color:var(--muted)">Forgot PIN? <span onclick="lockUsePassword()" style="color:var(--accent);cursor:pointer;text-decoration:underline">Use password</span></div>
+</div>
+
+<!-- Sale Detail Sheet -->
+<div id="detail-overlay" onclick="closeDetail()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;backdrop-filter:blur(4px)"></div>
+<div id="detail-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:8001;background:var(--surface);border-radius:24px 24px 0 0;border-top:1px solid var(--border2);max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.35s cubic-bezier(.34,1.1,.64,1)">
+  <div style="padding:12px 0 0;display:flex;justify-content:center">
+    <div style="width:40px;height:4px;background:var(--border2);border-radius:2px"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px">
+    <div style="font-size:17px;font-weight:800;color:var(--text)" id="ds-title">Sale Details</div>
+    <button onclick="closeDetail()" style="background:var(--card2);border:none;color:var(--muted);font-size:18px;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
+  </div>
+  <div id="detail-body" style="padding:0 20px 40px"></div>
 </div>
 </body>
 </html>
