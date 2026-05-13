@@ -685,17 +685,6 @@
       <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">₦0</div><div class="stat-lbl">My Today</div></div>
     </div>
 
-    <!-- Monthly target progress -->
-    <div id="target-section" style="margin:0 12px 8px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;display:none">
-      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px">
-        <span style="color:var(--text2)">Monthly Target</span>
-        <span id="target-pct" style="color:var(--accent)">0%</span>
-      </div>
-      <div class="target-bar-wrap"><div class="target-bar-fill" id="target-fill" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--cyan))"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px">
-        <span id="target-rev-label">₦0</span><span id="target-goal-label">₦0 goal</span>
-      </div>
-    </div>
 
     <div class="section-title">Leaderboard</div>
     <div class="leader-list" id="leader-list"></div>
@@ -913,11 +902,6 @@
       <button onclick="postAnnouncement()" style="width:100%;margin-top:8px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Post to Feed</button>
       <div id="adm-announce-list" style="margin-top:12px"></div>
     </div>
-    <!-- Monthly Targets -->
-    <div style="padding:14px 16px 0">
-      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Monthly Targets</div>
-      <div id="adm-targets-list"></div>
-    </div>
     <div style="padding:14px 16px 0">
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">All Transactions</div>
       <div id="adm-tx-list" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1001,7 +985,6 @@ const TEAM = [
 ];
 const DAILY_TARGET  = 50000;
 const OVERDUE_DAYS  = 30;
-let   monthlyTargets = {}; // { memberId: amount } loaded from Firebase
 let   announcements  = []; // loaded from Firebase
 let   salesComments  = {}; // { saleId: [{author,text,ts}] }
 let   approvedSales  = {}; // { saleId: true }
@@ -1645,9 +1628,8 @@ function renderAdmin() {
     </div>`;
   }).join('');
 
-  // Render announcements + targets
+  // Render announcements
   renderAdminAnnouncements();
-  renderAdminTargets();
 
   const txList = document.getElementById('adm-tx-list');
   if (!sales.length) {
@@ -1860,26 +1842,6 @@ function renderDash() {
     if (oc) oc.textContent = overdueMine.length;
   }
 
-  // Monthly target progress
-  const myTarget = monthlyTargets[uid];
-  const targetSection = document.getElementById('target-section');
-  if (targetSection) {
-    if (myTarget && myTarget > 0) {
-      const mo = new Date();
-      const monthRev = mySales.filter(s => {
-        const d = new Date(s.ts);
-        return d.getMonth()===mo.getMonth() && d.getFullYear()===mo.getFullYear();
-      }).reduce((a,s)=>a+s.amount, 0);
-      const pct = Math.min(100, Math.round((monthRev/myTarget)*100));
-      targetSection.style.display = '';
-      document.getElementById('target-pct').textContent = pct+'%';
-      document.getElementById('target-fill').style.width = pct+'%';
-      document.getElementById('target-rev-label').textContent = '\u20A6'+fmtMoney(monthRev);
-      document.getElementById('target-goal-label').textContent = '\u20A6'+fmtMoney(myTarget)+' goal';
-    } else {
-      targetSection.style.display = 'none';
-    }
-  }
 
   const maxRev = byM[sorted[0]?.id]?.rev||1;
   document.getElementById('leader-list').innerHTML = sorted.map((m,i)=>{
@@ -2083,10 +2045,6 @@ function setupExtrasListener() {
     renderAnnouncements();
     renderAdminAnnouncements();
   });
-  db.ref('monthlyTargets').on('value', snap => {
-    monthlyTargets = snap.val() || {};
-    if (document.getElementById('screen-app').classList.contains('active')) { renderDash(); renderAdminTargets(); }
-  });
   db.ref('salesComments').on('value', snap => {
     salesComments = snap.val() || {};
   });
@@ -2168,34 +2126,6 @@ function approveSale(id) {
   }
 }
 
-// ── Monthly targets ───────────────────────────────────────────
-function setTarget(memberId) {
-  const el = document.getElementById('target-input-'+memberId);
-  if (!el) return;
-  const val = parseFloat(el.value);
-  if (!val || val <= 0) { toast('Enter a valid target amount'); return; }
-  if (!firebaseReady()) { toast('Firebase required'); return; }
-  db.ref('monthlyTargets/'+memberId).set(val)
-    .then(() => toast('Target set for '+(TEAM.find(m=>m.id===memberId)?.name||memberId)))
-    .catch(() => toast('Failed to set target'));
-}
-function renderAdminTargets() {
-  const el = document.getElementById('adm-targets-list');
-  if (!el) return;
-  const marketers = TEAM.filter(m => m.id !== 'emeka');
-  el.innerHTML = marketers.map(m => {
-    const cur = monthlyTargets[m.id] || 0;
-    return `<div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px">
-      <span style="font-size:20px">${m.emoji}</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:700;color:var(--text)">${m.name}</div>
-        ${cur>0?`<div style="font-size:11px;color:var(--muted)">Current: ₦${fmtMoney(cur)}</div>`:'<div style="font-size:11px;color:var(--muted)">No target set</div>'}
-      </div>
-      <input id="target-input-${m.id}" type="number" placeholder="Amount" style="width:110px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;-webkit-appearance:none" value="${cur||''}">
-      <button onclick="setTarget('${m.id}')" style="background:var(--accent);border:none;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap">Set</button>
-    </div>`;
-  }).join('');
-}
 
 // ── Revenue trend chart ───────────────────────────────────────
 function renderTrendChart() {
