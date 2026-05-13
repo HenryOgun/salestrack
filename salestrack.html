@@ -683,8 +683,8 @@
     </div>
 
     <div class="stats-row">
-      <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-icon">&#128176;</div><div class="stat-val" id="db-revenue">&#8358;0</div><div class="stat-lbl">My Revenue</div></div>
-      <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">&#8358;0</div><div class="stat-lbl">My Today</div></div>
+      <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-icon">&#128176;</div><div class="stat-val" id="db-revenue">₦0</div><div class="stat-lbl">My Revenue</div></div>
+      <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">₦0</div><div class="stat-lbl">My Today</div></div>
     </div>
 
     <!-- Monthly target progress -->
@@ -695,7 +695,7 @@
       </div>
       <div class="target-bar-wrap"><div class="target-bar-fill" id="target-fill" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--cyan))"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px">
-        <span id="target-rev-label">&#8358;0</span><span id="target-goal-label">&#8358;0 goal</span>
+        <span id="target-rev-label">₦0</span><span id="target-goal-label">₦0 goal</span>
       </div>
     </div>
 
@@ -766,9 +766,9 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Amount (&#8358;)</label>
+        <label class="form-label">Amount (₦)</label>
         <div class="currency-wrap">
-          <span class="currency-symbol">&#8358;</span>
+          <span class="currency-symbol">₦</span>
           <input class="form-input" id="f-amount" type="number" inputmode="decimal" placeholder="0.00" min="0" step="0.01">
         </div>
       </div>
@@ -848,7 +848,7 @@
     </div>
     <!-- Stats -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 14px 14px">
-      <div class="stat-card"><div class="stat-val" id="rpt-rev">&#8358;0</div><div class="stat-lbl">Revenue</div></div>
+      <div class="stat-card"><div class="stat-val" id="rpt-rev">₦0</div><div class="stat-lbl">Revenue</div></div>
       <div class="stat-card"><div class="stat-val" id="rpt-deals">0</div><div class="stat-lbl">Deals</div></div>
       <div class="stat-card"><div class="stat-val" id="rpt-slots">0</div><div class="stat-lbl">Slots</div></div>
     </div>
@@ -969,7 +969,7 @@
         <div><label class="form-label">End Date</label><input class="form-input" id="e-end-date" type="date"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 18px">
-        <div><label class="form-label">Amount (&#8358;)</label><div class="currency-wrap"><span class="currency-symbol">&#8358;</span><input class="form-input" id="e-amount" type="number" inputmode="decimal" min="0" step="0.01" style="padding-left:28px"></div></div>
+        <div><label class="form-label">Amount (₦)</label><div class="currency-wrap"><span class="currency-symbol">₦</span><input class="form-input" id="e-amount" type="number" inputmode="decimal" min="0" step="0.01" style="padding-left:28px"></div></div>
         <div><label class="form-label">Payment</label>
           <select class="form-select" id="e-payment" onchange="onEditPaymentChange()">
             <option value="Cash">Cash</option>
@@ -1637,7 +1637,7 @@ function renderAdmin() {
           <div style="font-size:11px;color:var(--muted)">${m.role}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-weight:700;font-size:14px;color:${m.color}">&#8358;${fmtMoney(st.rev)}</div>
+          <div style="font-weight:700;font-size:14px;color:${m.color}">₦${fmtMoney(st.rev)}</div>
           <div style="font-size:11px;color:var(--muted)">${st.deals} deal${st.deals!==1?'s':''} &bull; ${st.slots} slots</div>
         </div>
       </div>
@@ -1671,7 +1671,7 @@ function renderAdmin() {
       </div>
       <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">${esc(s.client)}${s.product?' &bull; '+esc(s.product):''}</div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px">
-        <span style="color:${seller.color};font-weight:700">&#8358;${fmtMoney(s.amount)}</span>
+        <span style="color:${seller.color};font-weight:700">₦${fmtMoney(s.amount)}</span>
         <span style="color:var(--muted)">${s.slots} slot${s.slots!==1?'s':''}</span>
         <span style="color:var(--muted)">${s.payment||'Cash'}</span>
         <button onclick="approveSale('${s.id}')" style="margin-left:auto;background:${isApproved?'rgba(34,199,106,0.15)':'var(--card2)'};border:1px solid ${isApproved?'rgba(34,199,106,0.4)':'var(--border)'};color:${isApproved?'var(--green)':'var(--muted)'};font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer">${isApproved?'&#10003; Approved':'Approve'}</button>
@@ -1814,7 +1814,7 @@ function buildSaleCard(s) {
       <!-- right: 6 items × 17px = 102px -->
       <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0">
         <div style="${R}font-size:11px;color:var(--muted)">${relTime(s.ts)}</div>
-        <div style="${R}font-size:14px;font-weight:800;color:var(--green)">&#8358;${fmtMoney(s.amount)}</div>
+        <div style="${R}font-size:14px;font-weight:800;color:var(--green)">₦${fmtMoney(s.amount)}</div>
         <div style="${R}font-size:12px;font-weight:600;color:var(--accent)">${s.slots} slot${s.slots!==1?'s':''}</div>
         <div style="${R}font-size:12px">${renewStr}</div>
         <div style="${R}font-size:11px;font-weight:700">
@@ -1901,7 +1901,7 @@ function renderDash() {
         <div class="leader-deals">${st.deals} deal${st.deals!==1?'s':''} \u00B7 ${st.slots} slot${st.slots!==1?'s':''}</div>
         <div class="leader-bar-wrap"><div class="leader-bar" style="width:${bp}%;background:${m.color}"></div></div>
       </div>
-      <div class="leader-rev">&#8358;${fmtMoney(st.rev)}</div>
+      <div class="leader-rev">₦${fmtMoney(st.rev)}</div>
     </div>`;
   }).join('');
 }
@@ -2196,7 +2196,7 @@ function renderAdminTargets() {
       <span style="font-size:20px">${m.emoji}</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:700;color:var(--text)">${m.name}</div>
-        ${cur>0?`<div style="font-size:11px;color:var(--muted)">Current: &#8358;${fmtMoney(cur)}</div>`:'<div style="font-size:11px;color:var(--muted)">No target set</div>'}
+        ${cur>0?`<div style="font-size:11px;color:var(--muted)">Current: ₦${fmtMoney(cur)}</div>`:'<div style="font-size:11px;color:var(--muted)">No target set</div>'}
       </div>
       <input id="target-input-${m.id}" type="number" placeholder="Amount" style="width:110px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;-webkit-appearance:none" value="${cur||''}">
       <button onclick="setTarget('${m.id}')" style="background:var(--accent);border:none;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap">Set</button>
@@ -2227,7 +2227,7 @@ function renderTrendChart() {
   chartEl.innerHTML = dayRevs.map((rev, i) => {
     const px = Math.max(4, Math.round((rev/maxRev)*chartH));
     return `<div class="trend-bar-col">
-      <div style="font-size:8px;color:var(--muted);text-align:center;overflow:hidden;white-space:nowrap">${rev>0?'&#8358;'+fmtMoney(rev):''}</div>
+      <div style="font-size:8px;color:var(--muted);text-align:center;overflow:hidden;white-space:nowrap">${rev>0?'₦'+fmtMoney(rev):''}</div>
       <div class="trend-bar-inner" style="height:${px}px"></div>
     </div>`;
   }).join('');
@@ -2279,7 +2279,7 @@ function showClientHistory(clientName) {
     return `<div style="background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${seller.color}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span style="font-size:13px;font-weight:700;color:var(--text)">${esc(s.pkg||'General')}</span>
-        <span style="font-size:13px;font-weight:800;color:var(--green)">&#8358;${fmtMoney(s.amount)}</span>
+        <span style="font-size:13px;font-weight:800;color:var(--green)">₦${fmtMoney(s.amount)}</span>
       </div>
       <div style="font-size:12px;color:var(--muted)">${seller.emoji} ${seller.name} &bull; ${fmtDate(s.startDate)} &#8594; ${fmtDate(s.endDate)}</div>
       ${s.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px;font-style:italic">"${esc(s.notes)}"</div>`:''}
@@ -2288,7 +2288,7 @@ function showClientHistory(clientName) {
   const totalRev = clientSales.reduce((a,s)=>a+s.amount,0);
   document.getElementById('ds-title').innerHTML = `&#128203; ${esc(clientName)} History`;
   document.getElementById('detail-body').innerHTML =
-    `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">${clientSales.length} campaign${clientSales.length!==1?'s':''} &bull; Total: <span style="color:var(--green);font-weight:700">&#8358;${fmtMoney(totalRev)}</span></div>`
+    `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">${clientSales.length} campaign${clientSales.length!==1?'s':''} &bull; Total: <span style="color:var(--green);font-weight:700">₦${fmtMoney(totalRev)}</span></div>`
     + (rows || '<div style="color:var(--muted);font-size:14px;padding:20px 0;text-align:center">No campaigns found</div>');
   document.getElementById('detail-overlay').style.display = 'block';
   const sheet = document.getElementById('detail-sheet');
