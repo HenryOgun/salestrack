@@ -900,9 +900,9 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 16px 0">
-      <div class="stat-card"><div class="stat-val" id="adm-total-rev">₦0</div><div class="stat-label">Total Revenue</div></div>
-      <div class="stat-card"><div class="stat-val" id="adm-total-deals">0</div><div class="stat-label">Total Deals</div></div>
-      <div class="stat-card"><div class="stat-val" id="adm-total-slots">0</div><div class="stat-label">Slots Sold</div></div>
+      <div class="stat-card"><div class="stat-val" id="adm-total-rev">₦0</div><div class="stat-lbl">Total Revenue</div></div>
+      <div class="stat-card"><div class="stat-val" id="adm-total-deals">0</div><div class="stat-lbl">Total Deals</div></div>
+      <div class="stat-card"><div class="stat-val" id="adm-total-slots">0</div><div class="stat-lbl">Slots Sold</div></div>
     </div>
     <div style="padding:14px 16px 0">
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Team Breakdown</div>
@@ -1617,7 +1617,7 @@ function renderAdmin() {
   const totalRev   = sales.reduce((a,s)=>a+s.amount,0);
   const totalDeals = sales.length;
   const totalSlots = sales.reduce((a,s)=>a+s.slots,0);
-  document.getElementById('adm-total-rev').textContent   = '&#8358;'+fmtMoney(totalRev);
+  document.getElementById('adm-total-rev').textContent   = '\u20A6'+fmtMoney(totalRev);
   document.getElementById('adm-total-deals').textContent = totalDeals;
   document.getElementById('adm-total-slots').textContent = totalSlots;
 
