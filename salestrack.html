@@ -417,6 +417,87 @@
   .ds-row:last-child { border-bottom:none; }
   .ds-label { font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;flex-shrink:0;padding-top:1px; }
   .ds-val { font-size:14px;font-weight:600;color:var(--text);text-align:right;word-break:break-word; }
+
+  /* ── LIGHT MODE ── */
+  body.light {
+    --bg:      #f0f2f8;
+    --surface: #ffffff;
+    --card:    #ffffff;
+    --card2:   #f4f6fc;
+    --border:  rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text:    #111827;
+    --text2:   #374151;
+    --muted:   #6b7280;
+    --shadow:  0 4px 24px rgba(0,0,0,0.10);
+  }
+  body.light .topbar,
+  body.light .tabbar { background: rgba(255,255,255,0.97); }
+  body.light .sale-card { background: linear-gradient(145deg,#fff,#f8faff); box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+  body.light .slot-banner { background: linear-gradient(135deg,rgba(78,127,255,0.1),rgba(24,196,184,0.07)); }
+  body.light .pin-key { background: linear-gradient(145deg,#f0f2f8,#e8ecf4); }
+  body.light #screen-login { background: radial-gradient(ellipse at 50% 0%,#dce8ff 0%,#f0f2f8 65%); }
+
+  /* ── OVERDUE badge ── */
+  .overdue-badge {
+    display:inline-block; background:rgba(255,71,87,0.15);
+    border:1px solid rgba(255,71,87,0.4); color:var(--red);
+    font-size:9px; font-weight:800; padding:1px 6px;
+    border-radius:4px; text-transform:uppercase; letter-spacing:.4px;
+    margin-left:4px; vertical-align:middle;
+  }
+  /* ── APPROVED badge ── */
+  .approved-badge {
+    display:inline-block; background:rgba(34,199,106,0.12);
+    border:1px solid rgba(34,199,106,0.3); color:var(--green);
+    font-size:9px; font-weight:800; padding:1px 6px;
+    border-radius:4px; text-transform:uppercase; letter-spacing:.4px;
+  }
+  /* ── SEARCH BAR ── */
+  .feed-search-wrap {
+    padding: 0 12px 10px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .feed-search {
+    flex:1; background:var(--card); border:1.5px solid var(--border);
+    border-radius:12px; padding:10px 14px;
+    color:var(--text); font-size:14px; font-family:inherit;
+    outline:none; transition:var(--transition);
+  }
+  .feed-search:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(78,127,255,0.12); }
+  .filter-scroll { padding:0 12px 12px; display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .filter-scroll::-webkit-scrollbar { display:none; }
+  .filter-chip {
+    flex-shrink:0; padding:6px 14px; border-radius:20px;
+    background:var(--card); border:1.5px solid var(--border);
+    color:var(--muted); font-size:12px; font-weight:700;
+    cursor:pointer; transition:var(--transition); white-space:nowrap;
+  }
+  .filter-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  /* ── TREND CHART ── */
+  .trend-bar-wrap { display:flex; align-items:flex-end; gap:5px; height:80px; padding:0 14px 0; margin-bottom:4px; }
+  .trend-bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .trend-bar-inner { width:100%; background:linear-gradient(180deg,var(--accent),rgba(78,127,255,0.4)); border-radius:5px 5px 0 0; min-height:4px; transition:height .4s ease; }
+  .trend-bar-lbl { font-size:9px; color:var(--muted); font-weight:600; }
+  /* ── ANNOUNCEMENTS ── */
+  .announce-card {
+    margin:0 12px 8px; padding:14px 16px;
+    background:linear-gradient(135deg,rgba(78,127,255,0.12),rgba(78,127,255,0.06));
+    border:1px solid rgba(78,127,255,0.25); border-radius:16px;
+  }
+  .announce-author { font-size:11px; font-weight:700; color:var(--accent); margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px; }
+  .announce-text { font-size:14px; color:var(--text); line-height:1.5; }
+  .announce-time { font-size:11px; color:var(--muted); margin-top:4px; }
+  /* ── COMMENTS ── */
+  .comment-item { padding:8px 0; border-bottom:1px solid var(--border); }
+  .comment-item:last-child { border-bottom:none; }
+  .comment-author { font-size:11px; font-weight:700; color:var(--accent); }
+  .comment-text { font-size:13px; color:var(--text2); margin-top:2px; line-height:1.4; }
+  .comment-time { font-size:10px; color:var(--muted); margin-top:2px; }
+  /* ── TARGET PROGRESS ── */
+  .target-bar-wrap { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; margin-top:6px; }
+  .target-bar-fill { height:6px; border-radius:3px; transition:width .6s ease; }
+
   ::-webkit-scrollbar { width: 2px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(78,127,255,0.2); border-radius: 2px; }
@@ -425,7 +506,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
-<body>
+<body id="app-body">
 
 <!-- LOGIN -->
 <div class="screen active" id="screen-login">
@@ -563,20 +644,59 @@
       <div class="feed-title">Live Feed</div>
       <div class="feed-live"><span class="live-dot"></span>Live</div>
     </div>
+    <!-- Announcements -->
+    <div id="announcements-list"></div>
+    <!-- Search -->
+    <div class="feed-search-wrap">
+      <input class="feed-search" id="feed-search" type="text" placeholder="&#128269; Search client, brand, ad type..." oninput="renderFeed()">
+    </div>
+    <!-- Filter chips -->
+    <div class="filter-scroll" id="filter-chips">
+      <button class="filter-chip active" data-filter="all"    onclick="setFeedFilter('all',this)">All</button>
+      <button class="filter-chip"        data-filter="Cash"   onclick="setFeedFilter('Cash',this)">Cash</button>
+      <button class="filter-chip"        data-filter="Transfer" onclick="setFeedFilter('Transfer',this)">Transfer</button>
+      <button class="filter-chip"        data-filter="Credit" onclick="setFeedFilter('Credit',this)">Credit</button>
+      <button class="filter-chip"        data-filter="overdue" onclick="setFeedFilter('overdue',this)">Overdue</button>
+    </div>
     <div id="feed-list"></div>
   </div>
 
   <!-- DASHBOARD -->
   <div class="page" id="page-dash">
-    <div class="dash-header">Dashboard</div>
+    <div class="dash-header" style="display:flex;align-items:center;justify-content:space-between;padding-right:16px">
+      <span>Dashboard</span>
+      <button onclick="toggleTheme()" id="theme-btn" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer">&#9790; Dark</button>
+    </div>
+
+    <!-- Slots banner -->
     <div class="slot-banner">
       <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-sold" style="color:var(--accent)">0</div><div class="slot-banner-lbl">My Slots</div></div>
       <div class="slot-divider"></div>
+      <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-remaining" style="color:var(--cyan)">100</div><div class="slot-banner-lbl">Slots Left</div></div>
+      <div class="slot-divider"></div>
       <div class="slot-banner-item"><div class="slot-banner-num" id="db-deals" style="color:var(--green)">0</div><div class="slot-banner-lbl">My Deals</div></div>
     </div>
+
+    <!-- Overdue credits alert -->
+    <div id="overdue-alert" style="display:none;margin:0 12px 8px;padding:12px 16px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);border-radius:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--red)">&#9888; <span id="overdue-count">0</span> overdue credit sale(s) — unpaid for 30+ days</div>
+    </div>
+
     <div class="stats-row">
       <div class="stat-card" style="--stat-color:var(--green)"><div class="stat-icon">&#128176;</div><div class="stat-val" id="db-revenue">&#8358;0</div><div class="stat-lbl">My Revenue</div></div>
       <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-icon">&#128198;</div><div class="stat-val" id="db-today">&#8358;0</div><div class="stat-lbl">My Today</div></div>
+    </div>
+
+    <!-- Monthly target progress -->
+    <div id="target-section" style="margin:0 12px 8px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;display:none">
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px">
+        <span style="color:var(--text2)">Monthly Target</span>
+        <span id="target-pct" style="color:var(--accent)">0%</span>
+      </div>
+      <div class="target-bar-wrap"><div class="target-bar-fill" id="target-fill" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--cyan))"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px">
+        <span id="target-rev-label">&#8358;0</span><span id="target-goal-label">&#8358;0 goal</span>
+      </div>
     </div>
 
     <div class="section-title">Leaderboard</div>
@@ -704,23 +824,39 @@
     <div class="feed-header">
       <div class="feed-title">Reports</div>
     </div>
-    <div style="display:flex;gap:8px;padding:0 14px 18px">
+    <!-- Period pills -->
+    <div style="display:flex;gap:8px;padding:0 14px 12px">
       <button class="rpt-pill active" id="rpt-day"   onclick="setReportPeriod('day')"  >Daily</button>
       <button class="rpt-pill"        id="rpt-week"  onclick="setReportPeriod('week')" >Weekly</button>
       <button class="rpt-pill"        id="rpt-month" onclick="setReportPeriod('month')">Monthly</button>
       <button class="rpt-pill"        id="rpt-year"  onclick="setReportPeriod('year')" >Yearly</button>
     </div>
-    <div style="padding:0 14px 8px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+    <!-- Per-person filter -->
+    <div class="filter-scroll" style="padding:0 14px 14px">
+      <button class="filter-chip active" onclick="setRptPerson('all',this)">All</button>
+      <button class="filter-chip" onclick="setRptPerson('ada',this)">Baba Marketing</button>
+      <button class="filter-chip" onclick="setRptPerson('tunde',this)">Bisola</button>
+      <button class="filter-chip" onclick="setRptPerson('grace',this)">Seyi</button>
+    </div>
+    <!-- Export buttons -->
+    <div style="padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
       <button onclick="exportCSV('day')"   style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Daily</button>
       <button onclick="exportCSV('week')"  style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Weekly</button>
       <button onclick="exportCSV('month')" style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Monthly</button>
       <button onclick="exportCSV('year')"  style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Yearly</button>
       <button onclick="exportCSV('all')"   style="background:var(--accent);border:1.5px solid var(--accent);color:#000;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Export All</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 14px 16px">
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 14px 14px">
       <div class="stat-card"><div class="stat-val" id="rpt-rev">&#8358;0</div><div class="stat-lbl">Revenue</div></div>
       <div class="stat-card"><div class="stat-val" id="rpt-deals">0</div><div class="stat-lbl">Deals</div></div>
       <div class="stat-card"><div class="stat-val" id="rpt-slots">0</div><div class="stat-lbl">Slots</div></div>
+    </div>
+    <!-- Revenue trend chart -->
+    <div style="padding:0 14px">
+      <div class="section-title" style="padding:0 0 10px">Revenue Trend (Last 7 Days)</div>
+      <div class="trend-bar-wrap" id="trend-chart"></div>
+      <div style="display:flex;justify-content:space-between;padding:0 2px;margin-bottom:14px" id="trend-labels"></div>
     </div>
     <div style="padding:0 14px 6px">
       <div class="section-title" style="padding:0 0 12px">Team Performance</div>
@@ -771,6 +907,18 @@
     <div style="padding:14px 16px 0">
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Team Breakdown</div>
       <div id="adm-team-breakdown"></div>
+    </div>
+    <!-- Announcements Composer -->
+    <div style="padding:14px 16px 0">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Post Announcement</div>
+      <textarea id="adm-announce-input" class="form-textarea" placeholder="Write an announcement visible to all team members..."></textarea>
+      <button onclick="postAnnouncement()" style="width:100%;margin-top:8px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Post to Feed</button>
+      <div id="adm-announce-list" style="margin-top:12px"></div>
+    </div>
+    <!-- Monthly Targets -->
+    <div style="padding:14px 16px 0">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Monthly Targets</div>
+      <div id="adm-targets-list"></div>
     </div>
     <div style="padding:14px 16px 0">
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">All Transactions</div>
@@ -853,7 +1001,14 @@ const TEAM = [
   { id: 'emeka', name: 'Chairman', role: 'Executive Oversight', pass: 'FioluTuyil@885', emoji: '\u{1F468}\u{1F3FE}\u200D\u{1F4BC}', color: '#f39c12' },
   { id: 'sola',  name: 'Admin',  role: 'Business Dev',  pass: 'Admin@887@885',  emoji: '\u{1F9D1}\u{1F3FD}\u200D\u{1F4BC}', color: '#1abc9c' },
 ];
-const DAILY_TARGET = 50000;
+const DAILY_TARGET  = 50000;
+const TOTAL_SLOTS   = 100;
+const OVERDUE_DAYS  = 30;
+let   monthlyTargets = {}; // { memberId: amount } loaded from Firebase
+let   announcements  = []; // loaded from Firebase
+let   salesComments  = {}; // { saleId: [{author,text,ts}] }
+let   approvedSales  = {}; // { saleId: true }
+let   currentTheme   = localStorage.getItem('salestrack_theme') || 'dark';
 
 const STORAGE_KEY  = 'salestrack_sales_v1';
 const CHANNEL_NAME = 'salestrack_sync';
@@ -879,6 +1034,7 @@ let channel = null, newSaleTimer = null, toastTimer = null;
 const DEVICE_KEY = 'salestrack_device';
 
 function init() {
+  applyTheme();
   loadSales(); setupChannel();
   const loggedIn = localStorage.getItem('salestrack_user');
   const device   = localStorage.getItem(DEVICE_KEY);
@@ -1160,18 +1316,21 @@ function doLogin() {
   if (!getPin(currentUser.id)) setTimeout(promptPinSetup, 600);
 }
 function isChairman() { return currentUser && currentUser.id === 'emeka'; }
+function isAdmin()    { return currentUser && (currentUser.id === 'emeka' || currentUser.id === 'sola'); }
 
 function enterApp() {
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-app').classList.add('active');
   document.getElementById('topbar-avatar').textContent = currentUser.emoji;
   document.getElementById('topbar-name').textContent = currentUser.name;
-  const ch = isChairman();
-  document.getElementById('tab-log').style.display   = ch ? 'none' : '';
-  document.getElementById('tab-admin').style.display  = ch ? ''    : 'none';
-  document.getElementById('fab').style.display        = ch ? 'none' : '';
+  const adminRole = isAdmin();
+  document.getElementById('tab-log').style.display   = isChairman() ? 'none' : '';
+  document.getElementById('tab-admin').style.display  = adminRole ? '' : 'none';
+  document.getElementById('fab').style.display        = isChairman() ? 'none' : '';
+  applyTheme();
+  setupExtrasListener();
   refreshAll();
-  showTab(ch ? 'admin' : 'feed');
+  showTab(adminRole ? 'admin' : 'feed');
   requestNotifyPermission();
 }
 
@@ -1224,7 +1383,10 @@ function getPeriodSales(p) {
 }
 
 function renderReports() {
-  var subset = getPeriodSales(reportPeriod);
+  var personFilter = currentRptPerson || 'all';
+  var periodSubset = getPeriodSales(reportPeriod);
+  var subset = personFilter === 'all' ? periodSubset : periodSubset.filter(function(s){return s.sellerId===personFilter;});
+
   var totalRev   = subset.reduce(function(a,s){return a+s.amount;},0);
   var totalDeals = subset.length;
   var totalSlots = subset.reduce(function(a,s){return a+s.slots;},0);
@@ -1238,6 +1400,9 @@ function renderReports() {
   setEl('rpt-renew-yes',     renewCounts.yes);
   setEl('rpt-renew-no',      renewCounts.no);
   setEl('rpt-renew-pending', renewCounts.pending);
+
+  // Trend chart
+  renderTrendChart();
 
   var visibleMembers = TEAM.filter(function(m){return m.id!=='emeka'&&m.id!=='sola';});
   var byM = {};
@@ -1254,7 +1419,7 @@ function renderReports() {
         +'<span style="font-size:22px">'+m.emoji+'</span>'
         +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--text)">'+m.name+'</div>'
         +'<div style="font-size:12px;color:var(--muted)">'+st.deals+' deal'+(st.deals!==1?'s':'')+' &bull; '+st.slots+' slot'+(st.slots!==1?'s':'')+'</div></div>'
-        +'<div style="font-size:16px;font-weight:800;color:'+m.color+'">'+'\u20A6'+fmtMoney(st.rev)+'</div>'
+        +'<div style="font-size:16px;font-weight:800;color:'+m.color+'">\u20A6'+fmtMoney(st.rev)+'</div>'
         +'</div>'
         +'<div style="background:rgba(255,255,255,0.07);border-radius:5px;height:8px;overflow:hidden">'
         +'<div style="background:'+m.color+';height:100%;width:'+pct+'%;border-radius:5px;transition:width .5s"></div>'
@@ -1448,11 +1613,11 @@ function saveEdit() {
 }
 
 function renderAdmin() {
-  if (!isChairman()) return;
+  if (!isAdmin()) return;
   const totalRev   = sales.reduce((a,s)=>a+s.amount,0);
   const totalDeals = sales.length;
   const totalSlots = sales.reduce((a,s)=>a+s.slots,0);
-  document.getElementById('adm-total-rev').textContent   = '₦'+fmtMoney(totalRev);
+  document.getElementById('adm-total-rev').textContent   = '&#8358;'+fmtMoney(totalRev);
   document.getElementById('adm-total-deals').textContent = totalDeals;
   document.getElementById('adm-total-slots').textContent = totalSlots;
 
@@ -1472,7 +1637,7 @@ function renderAdmin() {
           <div style="font-size:11px;color:var(--muted)">${m.role}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-weight:700;font-size:14px;color:${m.color}">₦${fmtMoney(st.rev)}</div>
+          <div style="font-weight:700;font-size:14px;color:${m.color}">&#8358;${fmtMoney(st.rev)}</div>
           <div style="font-size:11px;color:var(--muted)">${st.deals} deal${st.deals!==1?'s':''} &bull; ${st.slots} slots</div>
         </div>
       </div>
@@ -1483,6 +1648,10 @@ function renderAdmin() {
     </div>`;
   }).join('');
 
+  // Render announcements + targets
+  renderAdminAnnouncements();
+  renderAdminTargets();
+
   const txList = document.getElementById('adm-tx-list');
   if (!sales.length) {
     txList.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px 0;font-size:14px">No transactions yet</div>';
@@ -1492,17 +1661,20 @@ function renderAdmin() {
     const seller = TEAM.find(m=>m.id===s.sellerId)||{name:'Unknown',emoji:'?',color:'#888'};
     const d = new Date(s.ts);
     const timeStr = d.toLocaleDateString('en-NG',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+    const isApproved = !!approvedSales[s.id];
     return `<div style="background:var(--card);border-radius:14px;padding:12px 14px;border-left:4px solid ${seller.color};border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:16px">${seller.emoji}</span>
         <span style="font-weight:700;font-size:13px;color:var(--text)">${seller.name}</span>
+        ${isApproved?'<span class="approved-badge">Approved</span>':''}
         <span style="margin-left:auto;font-size:11px;color:var(--muted)">${timeStr}</span>
       </div>
-      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px">${s.client}</div>
-      <div style="display:flex;gap:12px;font-size:12px;color:var(--muted)">
-        <span style="color:${seller.color};font-weight:700">₦${fmtMoney(s.amount)}</span>
-        <span>📦 ${s.slots} slot${s.slots!==1?'s':''}</span>
-        ${s.note?`<span>📋 ${s.note}</span>`:''}
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">${esc(s.client)}${s.product?' &bull; '+esc(s.product):''}</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px">
+        <span style="color:${seller.color};font-weight:700">&#8358;${fmtMoney(s.amount)}</span>
+        <span style="color:var(--muted)">${s.slots} slot${s.slots!==1?'s':''}</span>
+        <span style="color:var(--muted)">${s.payment||'Cash'}</span>
+        <button onclick="approveSale('${s.id}')" style="margin-left:auto;background:${isApproved?'rgba(34,199,106,0.15)':'var(--card2)'};border:1px solid ${isApproved?'rgba(34,199,106,0.4)':'var(--border)'};color:${isApproved?'var(--green)':'var(--muted)'};font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer">${isApproved?'&#10003; Approved':'Approve'}</button>
       </div>
     </div>`;
   }).join('');
@@ -1566,12 +1738,32 @@ function onPaymentChange() {
 }
 
 function renderFeed() {
+  renderAnnouncements();
   const el = document.getElementById('feed-list');
-  if (!sales.length) {
-    el.innerHTML = '<div class="empty-feed"><div class="empty-icon">\u{1F4ED}</div><div class="empty-title">No sales yet</div><div class="empty-sub">Tap <strong>Log Sale</strong> to post your first deal!</div></div>';
+  const query = (document.getElementById('feed-search')?.value || '').toLowerCase().trim();
+  const now = Date.now();
+  let filtered = sales.filter(s => {
+    if (currentFeedFilter === 'Cash')     return s.payment === 'Cash';
+    if (currentFeedFilter === 'Transfer') return s.payment === 'Transfer';
+    if (currentFeedFilter === 'Credit')   return s.payment === 'Credit';
+    if (currentFeedFilter === 'overdue')  return s.payment === 'Credit' && (now-s.ts) > OVERDUE_DAYS*86400000;
+    return true;
+  });
+  if (query) {
+    filtered = filtered.filter(s =>
+      (s.client||'').toLowerCase().includes(query) ||
+      (s.product||'').toLowerCase().includes(query) ||
+      (s.pkg||'').toLowerCase().includes(query) ||
+      (s.agency||'').toLowerCase().includes(query) ||
+      (TEAM.find(m=>m.id===s.sellerId)?.name||'').toLowerCase().includes(query)
+    );
+  }
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-feed"><div class="empty-icon">${sales.length?'\u{1F50D}':'\u{1F4ED}'}</div><div class="empty-title">${sales.length?'No matching sales':'No sales yet'}</div><div class="empty-sub">${sales.length?'Try a different search or filter':'Tap <strong>Log Sale</strong> to post your first deal!'}</div></div>`;
     return;
   }
-  el.innerHTML = sales.map(buildSaleCard).join('');
+  el.innerHTML = filtered.map(buildSaleCard).join('');
+  initSwipeToDelete();
 }
 function buildSaleCard(s) {
   const m    = TEAM.find(t => t.id === s.sellerId) || { name: s.sellerId, emoji: '\u{1F464}', color: '#888' };
@@ -1585,7 +1777,9 @@ function buildSaleCard(s) {
   const dateStr   = (s.startDate||s.endDate) ? `\uD83D\uDCC5 ${fmtDate(s.startDate)} \u2192 ${fmtDate(s.endDate)}` : '\u00A0';
   const noteStr   = s.notes ? `"${esc(s.notes)}"` : '\u00A0';
   const detailStr = details || '\u00A0';
-  const clientStr = s.client ? `${esc(s.client)}${s.product?' \u00B7 '+esc(s.product):''}` : '\u00A0';
+  const clientStr = s.client
+    ? `<span onclick="event.stopPropagation();showClientHistory('${s.client.replace(/'/g,"\\'")}')" style="text-decoration:underline;text-underline-offset:2px;cursor:pointer">${esc(s.client)}</span>${s.product?' \u00B7 '+esc(s.product):''}`
+    : '\u00A0';
 
   const renewIcon  = { yes:'\u2705', no:'\u26D4', pending:'\u{1F550}' };
   const renewColor = { yes:'var(--green)', no:'var(--red)', pending:'var(--yellow)' };
@@ -1593,13 +1787,14 @@ function buildSaleCard(s) {
     ? `<span style="color:${renewColor[s.renewal]}">${renewIcon[s.renewal]}</span>`
     : `<span style="visibility:hidden">\u2705</span>`;
 
-  return `<div class="sale-card" style="border-left:3px solid ${m.color};cursor:pointer" onclick="openDetail('${s.id}',event)">
+  return `<div class="sale-card" data-sale-id="${s.id}" style="border-left:3px solid ${m.color};cursor:pointer" onclick="openDetail('${s.id}',event)">
 
     <!-- badge row: always 16px -->
-    <div style="height:16px;display:flex;align-items:center;padding:0 10px">
+    <div style="height:16px;display:flex;align-items:center;gap:4px;padding:0 10px">
       ${s.isNew
         ? `<span style="background:var(--green);color:#000;font-size:10px;font-weight:800;padding:0 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">New</span>`
         : `<span style="visibility:hidden;font-size:10px;padding:0 6px">New</span>`}
+      ${approvedSales[s.id] ? `<span class="approved-badge">Approved</span>` : ''}
     </div>
 
     <!-- body: avatar + left col + right col -->
@@ -1648,15 +1843,51 @@ function renderDash() {
   const mySlots    = mySales.reduce((a,s)=>a+s.slots,0);
   const today      = todayKey();
   const myTodayRev = mySales.filter(s=>dayKey(s.ts)===today).reduce((a,s)=>a+s.amount,0);
-  const myAvg      = mySales.length ? myRev/mySales.length : 0;
   const byM = {};
   TEAM.forEach(m=>{ byM[m.id]={rev:0,deals:0,slots:0}; });
   sales.forEach(s=>{ if(byM[s.sellerId]){ byM[s.sellerId].rev+=s.amount; byM[s.sellerId].deals++; byM[s.sellerId].slots+=s.slots; } });
   const sorted = TEAM.filter(m=>m.id!=='emeka'&&m.id!=='sola').sort((a,b)=>byM[b.id].rev-byM[a.id].rev);
+
+  // Slots remaining (team total vs 100 limit)
+  const totalSlotsUsed = sales.reduce((a,s)=>a+s.slots,0);
+  const slotsLeft = Math.max(0, TOTAL_SLOTS - totalSlotsUsed);
   document.getElementById('db-slots-sold').textContent = mySlots;
+  document.getElementById('db-slots-remaining').textContent = slotsLeft;
   document.getElementById('db-deals').textContent = mySales.length;
   document.getElementById('db-revenue').textContent = '\u20A6'+fmtMoney(myRev);
   document.getElementById('db-today').textContent = '\u20A6'+fmtMoney(myTodayRev);
+
+  // Overdue credits (own unpaid credits 30+ days old)
+  const now = Date.now();
+  const overdueMine = mySales.filter(s => s.payment==='Credit' && (now-s.ts) > OVERDUE_DAYS*86400000);
+  const overdueEl = document.getElementById('overdue-alert');
+  if (overdueEl) {
+    overdueEl.style.display = overdueMine.length ? '' : 'none';
+    const oc = document.getElementById('overdue-count');
+    if (oc) oc.textContent = overdueMine.length;
+  }
+
+  // Monthly target progress
+  const myTarget = monthlyTargets[uid];
+  const targetSection = document.getElementById('target-section');
+  if (targetSection) {
+    if (myTarget && myTarget > 0) {
+      const mo = new Date();
+      const monthRev = mySales.filter(s => {
+        const d = new Date(s.ts);
+        return d.getMonth()===mo.getMonth() && d.getFullYear()===mo.getFullYear();
+      }).reduce((a,s)=>a+s.amount, 0);
+      const pct = Math.min(100, Math.round((monthRev/myTarget)*100));
+      targetSection.style.display = '';
+      document.getElementById('target-pct').textContent = pct+'%';
+      document.getElementById('target-fill').style.width = pct+'%';
+      document.getElementById('target-rev-label').textContent = '\u20A6'+fmtMoney(monthRev);
+      document.getElementById('target-goal-label').textContent = '\u20A6'+fmtMoney(myTarget)+' goal';
+    } else {
+      targetSection.style.display = 'none';
+    }
+  }
+
   const maxRev = byM[sorted[0]?.id]?.rev||1;
   document.getElementById('leader-list').innerHTML = sorted.map((m,i)=>{
     const st=byM[m.id]; const bp=maxRev>0?Math.round((st.rev/maxRev)*100):0;
@@ -1670,7 +1901,7 @@ function renderDash() {
         <div class="leader-deals">${st.deals} deal${st.deals!==1?'s':''} \u00B7 ${st.slots} slot${st.slots!==1?'s':''}</div>
         <div class="leader-bar-wrap"><div class="leader-bar" style="width:${bp}%;background:${m.color}"></div></div>
       </div>
-      <div class="leader-rev">₦${fmtMoney(st.rev)}</div>
+      <div class="leader-rev">&#8358;${fmtMoney(st.rev)}</div>
     </div>`;
   }).join('');
 }
@@ -1698,7 +1929,9 @@ function renderTeam() {
 }
 
 function refreshAll() {
-  if (typeof isChairman === 'function' && isChairman()) { renderAdmin(); renderReports(); return; } renderFeed(); renderDash(); renderTeam(); renderReports(); }
+  renderFeed(); renderDash(); renderTeam(); renderReports();
+  if (isAdmin()) renderAdmin();
+}
 function showNotifyDot()  { document.getElementById('notify-dot').classList.add('active'); }
 function clearNotifyDot() { document.getElementById('notify-dot').classList.remove('active'); }
 function showNewSalePopup(sale) {
@@ -1783,9 +2016,23 @@ function openDetail(id, e) {
     ['Logged',    relTime(s.ts)],
   ].filter(Boolean);
 
+  const comments = salesComments[id] ? Object.values(salesComments[id]).sort((a,b)=>a.ts-b.ts) : [];
+  const commentHtml = `
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Comments (${comments.length})</div>
+      ${comments.map(c=>{
+        const au = TEAM.find(x=>x.id===c.authorId)||{name:'?',emoji:'?'};
+        return `<div class="comment-item"><span class="comment-author">${au.emoji} ${au.name}</span><div class="comment-text">${esc(c.text)}</div><div class="comment-time">${relTime(c.ts)}</div></div>`;
+      }).join('')}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input id="comment-input-${id}" type="text" placeholder="Add a comment..." style="flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')addComment('${id}')">
+        <button onclick="addComment('${id}')" style="background:var(--accent);border:none;color:#fff;font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;cursor:pointer">Post</button>
+      </div>
+    </div>`;
+
   document.getElementById('detail-body').innerHTML = rows.map(([lbl, val]) =>
     `<div class="ds-row"><span class="ds-label">${lbl}</span><span class="ds-val">${val}</span></div>`
-  ).join('');
+  ).join('') + commentHtml;
 
   document.getElementById('detail-overlay').style.display = 'block';
   const sheet = document.getElementById('detail-sheet');
@@ -1800,6 +2047,253 @@ function closeDetail() {
     sheet.style.display = 'none';
     document.getElementById('detail-overlay').style.display = 'none';
   }, 320);
+}
+
+// ── Theme ────────────────────────────────────────────────────
+function applyTheme() {
+  document.body.classList.toggle('light', currentTheme === 'light');
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.innerHTML = currentTheme === 'light' ? '&#9790; Dark' : '&#9728; Light';
+}
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('salestrack_theme', currentTheme);
+  applyTheme();
+}
+
+// ── Feed filter & search ──────────────────────────────────────
+let currentFeedFilter = 'all';
+function setFeedFilter(f, btn) {
+  currentFeedFilter = f;
+  document.querySelectorAll('#filter-chips .filter-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderFeed();
+}
+
+// ── Per-person report filter ──────────────────────────────────
+let currentRptPerson = 'all';
+function setRptPerson(person, btn) {
+  currentRptPerson = person;
+  document.querySelectorAll('#page-reports .filter-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderReports();
+}
+
+// ── Firebase extras listener ──────────────────────────────────
+let extrasListenerSetup = false;
+function setupExtrasListener() {
+  if (!firebaseReady() || extrasListenerSetup) return;
+  extrasListenerSetup = true;
+  db.ref('announcements').on('value', snap => {
+    const data = snap.val();
+    announcements = data ? Object.values(data).sort((a,b) => b.ts - a.ts) : [];
+    renderAnnouncements();
+    renderAdminAnnouncements();
+  });
+  db.ref('monthlyTargets').on('value', snap => {
+    monthlyTargets = snap.val() || {};
+    if (document.getElementById('screen-app').classList.contains('active')) { renderDash(); renderAdminTargets(); }
+  });
+  db.ref('salesComments').on('value', snap => {
+    salesComments = snap.val() || {};
+  });
+  db.ref('approvedSales').on('value', snap => {
+    approvedSales = snap.val() || {};
+    if (document.getElementById('screen-app').classList.contains('active')) renderFeed();
+  });
+}
+
+// ── Announcements ─────────────────────────────────────────────
+function renderAnnouncements() {
+  const el = document.getElementById('announcements-list');
+  if (!el) return;
+  if (!announcements.length) { el.innerHTML = ''; return; }
+  el.innerHTML = announcements.slice(0,5).map(a => {
+    const author = TEAM.find(m => m.id === a.authorId);
+    return `<div class="announce-card">
+      <div class="announce-author">${author ? author.emoji+' '+author.name : 'Admin'}</div>
+      <div class="announce-text">${esc(a.text)}</div>
+      <div class="announce-time">${relTime(a.ts)}</div>
+    </div>`;
+  }).join('');
+}
+function renderAdminAnnouncements() {
+  const el = document.getElementById('adm-announce-list');
+  if (!el) return;
+  if (!announcements.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No announcements yet</div>'; return; }
+  el.innerHTML = announcements.map(a => {
+    const author = TEAM.find(m => m.id === a.authorId);
+    return `<div class="announce-card" style="margin:0 0 8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="announce-author">${author ? author.emoji+' '+author.name : 'Admin'}</div>
+        <button onclick="deleteAnnouncement('${a.id}')" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0 4px">&times;</button>
+      </div>
+      <div class="announce-text">${esc(a.text)}</div>
+      <div class="announce-time">${relTime(a.ts)}</div>
+    </div>`;
+  }).join('');
+}
+function postAnnouncement() {
+  if (!isAdmin()) return;
+  const el = document.getElementById('adm-announce-input');
+  if (!el) return;
+  const text = el.value.trim();
+  if (!text) { toast('Enter announcement text'); return; }
+  if (!firebaseReady()) { toast('Firebase required for announcements'); return; }
+  const ann = { id: Date.now().toString(36)+Math.random().toString(36).slice(2,4), authorId: currentUser.id, text, ts: Date.now() };
+  db.ref('announcements/'+ann.id).set(ann)
+    .then(() => { el.value = ''; toast('Announcement posted!'); })
+    .catch(() => toast('Failed to post'));
+}
+function deleteAnnouncement(id) {
+  if (!isAdmin()) return;
+  if (!confirm('Delete this announcement?')) return;
+  db.ref('announcements/'+id).remove().catch(() => toast('Failed to delete'));
+}
+
+// ── Comments ──────────────────────────────────────────────────
+function addComment(saleId) {
+  const input = document.getElementById('comment-input-'+saleId);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  if (!firebaseReady()) { toast('Firebase required for comments'); return; }
+  const comment = { authorId: currentUser.id, text, ts: Date.now() };
+  db.ref('salesComments/'+saleId).push(comment)
+    .then(() => { input.value = ''; toast('Comment added'); })
+    .catch(() => toast('Failed to add comment'));
+}
+
+// ── Approve sales ─────────────────────────────────────────────
+function approveSale(id) {
+  if (!isAdmin()) return;
+  if (!firebaseReady()) { toast('Firebase required'); return; }
+  if (approvedSales[id]) {
+    db.ref('approvedSales/'+id).remove().then(() => toast('Approval removed'));
+  } else {
+    db.ref('approvedSales/'+id).set({ by: currentUser.id, ts: Date.now() }).then(() => toast('Sale approved!'));
+  }
+}
+
+// ── Monthly targets ───────────────────────────────────────────
+function setTarget(memberId) {
+  const el = document.getElementById('target-input-'+memberId);
+  if (!el) return;
+  const val = parseFloat(el.value);
+  if (!val || val <= 0) { toast('Enter a valid target amount'); return; }
+  if (!firebaseReady()) { toast('Firebase required'); return; }
+  db.ref('monthlyTargets/'+memberId).set(val)
+    .then(() => toast('Target set for '+(TEAM.find(m=>m.id===memberId)?.name||memberId)))
+    .catch(() => toast('Failed to set target'));
+}
+function renderAdminTargets() {
+  const el = document.getElementById('adm-targets-list');
+  if (!el) return;
+  const marketers = TEAM.filter(m => m.id !== 'emeka');
+  el.innerHTML = marketers.map(m => {
+    const cur = monthlyTargets[m.id] || 0;
+    return `<div style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px">
+      <span style="font-size:20px">${m.emoji}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${m.name}</div>
+        ${cur>0?`<div style="font-size:11px;color:var(--muted)">Current: &#8358;${fmtMoney(cur)}</div>`:'<div style="font-size:11px;color:var(--muted)">No target set</div>'}
+      </div>
+      <input id="target-input-${m.id}" type="number" placeholder="Amount" style="width:110px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;-webkit-appearance:none" value="${cur||''}">
+      <button onclick="setTarget('${m.id}')" style="background:var(--accent);border:none;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap">Set</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Revenue trend chart ───────────────────────────────────────
+function renderTrendChart() {
+  const chartEl = document.getElementById('trend-chart');
+  const labelsEl = document.getElementById('trend-labels');
+  if (!chartEl || !labelsEl) return;
+  const personId = currentRptPerson || 'all';
+  const now = new Date();
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i); days.push(d);
+  }
+  const dayRevs = days.map(day => {
+    const dk = day.getFullYear()+'-'+day.getMonth()+'-'+day.getDate();
+    return sales
+      .filter(s => (personId==='all' || s.sellerId===personId) && dayKey(s.ts)===dk)
+      .reduce((a,s) => a+s.amount, 0);
+  });
+  const maxRev = Math.max(...dayRevs, 1);
+  const chartH = 68;
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  chartEl.innerHTML = dayRevs.map((rev, i) => {
+    const px = Math.max(4, Math.round((rev/maxRev)*chartH));
+    return `<div class="trend-bar-col">
+      <div style="font-size:8px;color:var(--muted);text-align:center;overflow:hidden;white-space:nowrap">${rev>0?'&#8358;'+fmtMoney(rev):''}</div>
+      <div class="trend-bar-inner" style="height:${px}px"></div>
+    </div>`;
+  }).join('');
+  labelsEl.innerHTML = days.map(d =>
+    `<span style="font-size:10px;color:var(--muted);font-weight:600;flex:1;text-align:center">${dayNames[d.getDay()]}</span>`
+  ).join('');
+}
+
+// ── Swipe left to delete ──────────────────────────────────────
+function initSwipeToDelete() {
+  document.querySelectorAll('.sale-card[data-sale-id]').forEach(card => {
+    let sx = 0, sy = 0, active = false;
+    card.addEventListener('touchstart', e => {
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; active = true;
+    }, { passive: true });
+    card.addEventListener('touchmove', e => {
+      if (!active) return;
+      const dx = e.touches[0].clientX - sx;
+      const dy = Math.abs(e.touches[0].clientY - sy);
+      if (dy > 25) { active = false; card.style.transform=''; card.style.opacity=''; return; }
+      if (dx < -5) {
+        card.style.transform = `translateX(${Math.max(dx, -90)}px)`;
+        card.style.opacity = String(Math.max(0.45, 1+dx/180));
+      }
+    }, { passive: true });
+    card.addEventListener('touchend', e => {
+      if (!active) return; active = false;
+      const dx = e.changedTouches[0].clientX - sx;
+      if (dx < -65) {
+        const id = card.dataset.saleId;
+        const s = sales.find(x => x.id === id);
+        if (s && s.sellerId === currentUser?.id) {
+          card.style.transform = 'translateX(-100%)'; card.style.opacity = '0';
+          setTimeout(() => deleteSale(id), 200);
+          return;
+        }
+      }
+      card.style.transform = ''; card.style.opacity = '';
+    });
+  });
+}
+
+// ── Client history ────────────────────────────────────────────
+function showClientHistory(clientName) {
+  const clientSales = sales.filter(s => s.client === clientName).sort((a,b) => b.ts-a.ts);
+  const fmtDate = d => d ? d.split('-').reverse().join('-') : '—';
+  const rows = clientSales.map(s => {
+    const seller = TEAM.find(m => m.id===s.sellerId)||{name:'?',emoji:'?',color:'#888'};
+    return `<div style="background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${seller.color}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:700;color:var(--text)">${esc(s.pkg||'General')}</span>
+        <span style="font-size:13px;font-weight:800;color:var(--green)">&#8358;${fmtMoney(s.amount)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">${seller.emoji} ${seller.name} &bull; ${fmtDate(s.startDate)} &#8594; ${fmtDate(s.endDate)}</div>
+      ${s.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px;font-style:italic">"${esc(s.notes)}"</div>`:''}
+    </div>`;
+  }).join('');
+  const totalRev = clientSales.reduce((a,s)=>a+s.amount,0);
+  document.getElementById('ds-title').innerHTML = `&#128203; ${esc(clientName)} History`;
+  document.getElementById('detail-body').innerHTML =
+    `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">${clientSales.length} campaign${clientSales.length!==1?'s':''} &bull; Total: <span style="color:var(--green);font-weight:700">&#8358;${fmtMoney(totalRev)}</span></div>`
+    + (rows || '<div style="color:var(--muted);font-size:14px;padding:20px 0;text-align:center">No campaigns found</div>');
+  document.getElementById('detail-overlay').style.display = 'block';
+  const sheet = document.getElementById('detail-sheet');
+  sheet.style.display = 'block';
+  requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
 }
 
 init();
