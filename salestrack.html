@@ -488,6 +488,32 @@
   .comment-text { font-size:13px; color:var(--text2); margin-top:2px; line-height:1.4; }
   .comment-time { font-size:10px; color:var(--muted); margin-top:2px; }
 
+  /* ── STATUS BADGE ── */
+  .status-badge {
+    display:inline-block; font-size:9px; font-weight:800;
+    padding:1px 6px; border-radius:4px; text-transform:uppercase; letter-spacing:.4px;
+    vertical-align:middle;
+  }
+  .status-active   { background:rgba(34,199,106,0.15); border:1px solid rgba(34,199,106,0.35); color:var(--green); }
+  .status-upcoming { background:rgba(78,127,255,0.15); border:1px solid rgba(78,127,255,0.35); color:var(--accent); }
+  .status-ended    { background:rgba(82,95,122,0.2);   border:1px solid rgba(82,95,122,0.35);  color:var(--muted); }
+  /* ── DAILY SUMMARY ── */
+  .daily-summary-card {
+    margin:0 12px 8px; padding:13px 18px;
+    background:linear-gradient(135deg,rgba(34,199,106,0.12),rgba(24,196,184,0.08));
+    border:1px solid rgba(34,199,106,0.2); border-radius:16px;
+    display:flex; align-items:center; justify-content:space-around; gap:8px;
+  }
+  .ds-stat { text-align:center; }
+  .ds-stat-val { font-size:16px; font-weight:800; color:var(--text); }
+  .ds-stat-lbl { font-size:10px; color:var(--muted); font-weight:600; margin-top:2px; text-transform:uppercase; letter-spacing:.4px; }
+  /* ── RENEWAL ALERT ── */
+  .renewal-alert-card {
+    margin:0 12px 6px; padding:11px 14px;
+    background:rgba(240,180,41,0.08); border:1px solid rgba(240,180,41,0.3);
+    border-radius:12px;
+  }
+
   ::-webkit-scrollbar { width: 2px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(78,127,255,0.2); border-radius: 2px; }
@@ -634,6 +660,10 @@
       <div class="feed-title">Live Feed</div>
       <div class="feed-live"><span class="live-dot"></span>Live</div>
     </div>
+    <!-- Daily summary -->
+    <div id="daily-summary"></div>
+    <!-- Renewal alerts -->
+    <div id="renewal-alerts"></div>
     <!-- Announcements -->
     <div id="announcements-list"></div>
     <!-- Search -->
@@ -822,6 +852,7 @@
       <button onclick="exportCSV('month')" style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Monthly</button>
       <button onclick="exportCSV('year')"  style="background:var(--card);border:1.5px solid var(--border);color:var(--text2);font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Yearly</button>
       <button onclick="exportCSV('all')"   style="background:var(--accent);border:1.5px solid var(--accent);color:#000;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Export All</button>
+      <button onclick="exportCSV('person')" id="btn-export-person" style="display:none;background:var(--purple);border:1.5px solid var(--purple);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Export Person</button>
     </div>
     <!-- Stats -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 14px 14px">
@@ -829,15 +860,30 @@
       <div class="stat-card"><div class="stat-val" id="rpt-deals">0</div><div class="stat-lbl">Deals</div></div>
       <div class="stat-card"><div class="stat-val" id="rpt-slots">0</div><div class="stat-lbl">Slots</div></div>
     </div>
+    <!-- Monthly comparison -->
+    <div style="padding:0 14px 4px">
+      <div class="section-title" style="padding:0 0 10px">This Month vs Last Month</div>
+      <div id="rpt-month-compare"></div>
+    </div>
     <!-- Revenue trend chart -->
     <div style="padding:0 14px">
       <div class="section-title" style="padding:0 0 10px">Revenue Trend (Last 7 Days)</div>
       <div class="trend-bar-wrap" id="trend-chart"></div>
       <div style="display:flex;justify-content:space-between;padding:0 2px;margin-bottom:14px" id="trend-labels"></div>
     </div>
+    <!-- Revenue by ad type -->
+    <div style="padding:0 14px 6px">
+      <div class="section-title" style="padding:0 0 12px">Revenue by Ad Type</div>
+      <div id="rpt-adtype"></div>
+    </div>
     <div style="padding:0 14px 6px">
       <div class="section-title" style="padding:0 0 12px">Team Performance</div>
       <div id="rpt-members"></div>
+    </div>
+    <!-- Top clients -->
+    <div style="padding:0 14px 6px">
+      <div class="section-title" style="padding:0 0 12px">Top Clients</div>
+      <div id="rpt-top-clients"></div>
     </div>
     <div style="padding:0 14px 6px">
       <div class="section-title" style="padding:0 0 12px">Campaign Renewals</div>
@@ -1371,6 +1417,9 @@ function renderReports() {
 
   // Trend chart
   renderTrendChart();
+  renderMonthCompare(subset);
+  renderAdTypeBreakdown(subset);
+  renderTopClients(subset);
 
   var visibleMembers = TEAM.filter(function(m){return m.id!=='emeka'&&m.id!=='sola';});
   var byM = {};
@@ -1431,6 +1480,10 @@ function renderReports() {
 function exportCSV(period) {
   if (!sales.length) { toast('No sales recorded yet'); return; }
   var filtered = sales.slice();
+  // Filter by currently selected person in reports
+  if (currentRptPerson && currentRptPerson !== 'all') {
+    filtered = filtered.filter(function(s){ return s.sellerId === currentRptPerson; });
+  }
   if (period && period !== 'all') {
     var now = new Date(); var y=now.getFullYear(); var m=now.getMonth(); var d=now.getDate();
     filtered = filtered.filter(function(s){
@@ -1691,6 +1744,7 @@ function submitSale() {
     document.getElementById('renew-'+v+'-lbl').style.background  = 'var(--card)';
     document.getElementById('renew-'+v).checked = false;
   });
+  if (navigator.vibrate) navigator.vibrate(50);
   toast('₦' + fmtMoney(amount) + ' · ' + slots + ' slot' + (slots>1?'s':'') + ' posted!');
   showTab('feed');
   setTimeout(() => { const s = sales.find(x => x.id === sale.id); if(s) s.isNew = false; }, 5000);
@@ -1703,6 +1757,8 @@ function onPaymentChange() {
 
 function renderFeed() {
   renderAnnouncements();
+  renderDailySummary();
+  renderRenewalAlerts();
   const el = document.getElementById('feed-list');
   const query = (document.getElementById('feed-search')?.value || '').toLowerCase().trim();
   const now = Date.now();
@@ -1758,6 +1814,8 @@ function buildSaleCard(s) {
       ${s.isNew
         ? `<span style="background:var(--green);color:#000;font-size:10px;font-weight:800;padding:0 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">New</span>`
         : `<span style="visibility:hidden;font-size:10px;padding:0 6px">New</span>`}
+      ${(()=>{const cs=getCampaignStatus(s);return cs?`<span class="status-badge status-${cs.cls}">${cs.label}</span>`:'';})()}
+      ${s.payment==='Credit'?`<span style="font-size:10px;color:var(--yellow);font-weight:700">${creditAgeDays(s)}d old</span>`:''}
     </div>
 
     <!-- body: avatar + left col + right col -->
@@ -1861,6 +1919,10 @@ function renderTeam() {
           <div class="team-stat-item"><div class="team-stat-num" style="color:var(--green)">₦${fmtMoney(st.rev)}</div><div class="team-stat-lbl">Revenue</div></div>
           <div class="team-stat-item"><div class="team-stat-num" style="color:var(--accent)">${st.deals}</div><div class="team-stat-lbl">Deals</div></div>
           <div class="team-stat-item"><div class="team-stat-num" style="color:var(--yellow)">${st.slots}</div><div class="team-stat-lbl">Slots</div></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:6px;font-size:11px;color:var(--muted)">
+          <span>🔥 ${getSalesStreak(m.id)}-day streak</span>
+          <span>🕐 ${getLastActive(m.id)}</span>
         </div>
       </div>
     </div>`;
@@ -1969,9 +2031,13 @@ function openDetail(id, e) {
       </div>
     </div>`;
 
+  const shareBtn = `<div style="margin-top:14px">
+    <button onclick="shareReceipt('${s.id}')" style="width:100%;background:rgba(37,211,102,0.12);border:1.5px solid rgba(37,211,102,0.4);color:#25d366;font-size:13px;font-weight:700;padding:10px 0;border-radius:12px;cursor:pointer">📤 Share Receipt via WhatsApp</button>
+  </div>`;
+
   document.getElementById('detail-body').innerHTML = rows.map(([lbl, val]) =>
     `<div class="ds-row"><span class="ds-label">${lbl}</span><span class="ds-val">${val}</span></div>`
-  ).join('') + commentHtml;
+  ).join('') + shareBtn + commentHtml;
 
   document.getElementById('detail-overlay').style.display = 'block';
   const sheet = document.getElementById('detail-sheet');
@@ -1986,6 +2052,180 @@ function closeDetail() {
     sheet.style.display = 'none';
     document.getElementById('detail-overlay').style.display = 'none';
   }, 320);
+}
+
+// ── Campaign status ───────────────────────────────────────────
+function getCampaignStatus(s) {
+  if (!s.startDate && !s.endDate) return null;
+  const today = new Date().toISOString().slice(0,10);
+  if (s.endDate && s.endDate < today) return { label:'Ended',    cls:'status-ended' };
+  if (s.startDate && s.startDate > today) return { label:'Upcoming', cls:'status-upcoming' };
+  return { label:'Active', cls:'status-active' };
+}
+
+// ── Credit aging (days outstanding) ──────────────────────────
+function creditAgeDays(s) {
+  return Math.floor((Date.now() - s.ts) / 86400000);
+}
+
+// ── Sales streak ──────────────────────────────────────────────
+function getSalesStreak(memberId) {
+  const dks = new Set(sales.filter(s=>s.sellerId===memberId).map(s=>dayKey(s.ts)));
+  if (!dks.size) return 0;
+  let streak = 0;
+  const startOffset = dks.has(dayKey(Date.now())) ? 0 : 1;
+  for (let i = startOffset; ; i++) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    if (dks.has(d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate())) streak++;
+    else break;
+  }
+  return streak;
+}
+
+// ── Last active ───────────────────────────────────────────────
+function getLastActive(memberId) {
+  const ms = sales.filter(s=>s.sellerId===memberId);
+  if (!ms.length) return 'No sales yet';
+  return relTime(Math.max(...ms.map(s=>s.ts)));
+}
+
+// ── WhatsApp receipt ──────────────────────────────────────────
+function shareReceipt(id) {
+  const s = sales.find(x=>x.id===id);
+  if (!s) return;
+  const seller = TEAM.find(m=>m.id===s.sellerId);
+  const fd = d => d ? d.split('-').reverse().join('/') : '-';
+  const text = `*Diamond FM \u2014 Sales Summary*\n\n`
+    +`Client: ${s.client||'-'}\n`
+    +`Brand: ${s.product||'-'}\n`
+    +`Ad Type: ${s.pkg||'-'}\n`
+    +`Duration: ${s.duration||'-'}\n`
+    +`Slots: ${s.slots}\n`
+    +`Period: ${fd(s.startDate)} \u2013 ${fd(s.endDate)}\n`
+    +`Amount: \u20A6${s.amount?.toLocaleString()}\n`
+    +`Payment: ${s.payment||'Cash'}\n`
+    +(s.agency?`Agency: ${s.agency}\n`:'')+`\n`
+    +`Logged by: ${seller?.name||'-'}\n`
+    +`Date: ${new Date(s.ts).toLocaleDateString('en-NG')}\n\n`
+    +`_SalesTrack \u00B7 Diamond FM_`;
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
+}
+
+// ── Daily summary banner ──────────────────────────────────────
+function renderDailySummary() {
+  const el = document.getElementById('daily-summary');
+  if (!el) return;
+  const today = todayKey();
+  const todaySales = sales.filter(s=>dayKey(s.ts)===today);
+  if (!todaySales.length) { el.innerHTML=''; return; }
+  const rev   = todaySales.reduce((a,s)=>a+s.amount,0);
+  const deals = todaySales.length;
+  const slots = todaySales.reduce((a,s)=>a+s.slots,0);
+  el.innerHTML = `<div class="daily-summary-card">
+    <div class="ds-stat"><div class="ds-stat-val">\u20A6${fmtMoney(rev)}</div><div class="ds-stat-lbl">Today Revenue</div></div>
+    <div style="width:1px;height:30px;background:rgba(255,255,255,0.1)"></div>
+    <div class="ds-stat"><div class="ds-stat-val">${deals}</div><div class="ds-stat-lbl">Today Deals</div></div>
+    <div style="width:1px;height:30px;background:rgba(255,255,255,0.1)"></div>
+    <div class="ds-stat"><div class="ds-stat-val">${slots}</div><div class="ds-stat-lbl">Today Slots</div></div>
+  </div>`;
+}
+
+// ── Renewal due soon banner ───────────────────────────────────
+function renderRenewalAlerts() {
+  const el = document.getElementById('renewal-alerts');
+  if (!el) return;
+  const today = new Date().toISOString().slice(0,10);
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()+7);
+  const cutoffStr = cutoff.toISOString().slice(0,10);
+  const due = sales.filter(s => s.endDate && s.endDate >= today && s.endDate <= cutoffStr);
+  if (!due.length) { el.innerHTML=''; return; }
+  el.innerHTML = due.map(s => {
+    const seller = TEAM.find(m=>m.id===s.sellerId)||{emoji:'?',name:'?'};
+    const daysLeft = Math.ceil((new Date(s.endDate)-new Date(today))/(86400000));
+    return `<div class="renewal-alert-card">
+      <div style="font-size:12px;font-weight:800;color:var(--yellow)">&#128336; Campaign ending in ${daysLeft===0?'today':daysLeft+' day'+(daysLeft!==1?'s':'')}</div>
+      <div style="font-size:13px;color:var(--text);margin-top:3px">${seller.emoji} ${esc(s.client)} &bull; ${esc(s.pkg||'General')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Revenue by ad type ────────────────────────────────────────
+function renderAdTypeBreakdown(subset) {
+  const el = document.getElementById('rpt-adtype');
+  if (!el) return;
+  const byType = {};
+  subset.forEach(s => {
+    const t = s.pkg||'General';
+    byType[t] = (byType[t]||0) + s.amount;
+  });
+  const entries = Object.entries(byType).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if (!entries.length) { el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">No data</div>'; return; }
+  const maxVal = entries[0][1];
+  el.innerHTML = entries.map(([type,rev])=>{
+    const pct = Math.round((rev/maxVal)*100);
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:600;color:var(--text2)">${esc(type)}</span>
+        <span style="font-weight:700;color:var(--accent)">\u20A6${fmtMoney(rev)}</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:7px;overflow:hidden">
+        <div style="background:var(--accent);height:100%;width:${pct}%;border-radius:4px;transition:width .5s"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Top clients ───────────────────────────────────────────────
+function renderTopClients(subset) {
+  const el = document.getElementById('rpt-top-clients');
+  if (!el) return;
+  const byClient = {};
+  subset.forEach(s => {
+    if (!s.client) return;
+    if (!byClient[s.client]) byClient[s.client] = { rev:0, deals:0 };
+    byClient[s.client].rev   += s.amount;
+    byClient[s.client].deals += 1;
+  });
+  const top = Object.entries(byClient).sort((a,b)=>b[1].rev-a[1].rev).slice(0,5);
+  if (!top.length) { el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">No data</div>'; return; }
+  el.innerHTML = top.map(([client,st],i)=>
+    `<div style="display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:16px;font-weight:800;color:var(--muted);width:20px;text-align:center">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${esc(client)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${st.deals} deal${st.deals!==1?'s':''}</div>
+      </div>
+      <div style="font-size:15px;font-weight:800;color:var(--green)">\u20A6${fmtMoney(st.rev)}</div>
+    </div>`
+  ).join('');
+}
+
+// ── Monthly comparison ────────────────────────────────────────
+function renderMonthCompare(subset) {
+  const el = document.getElementById('rpt-month-compare');
+  if (!el) return;
+  const now = new Date();
+  const thisM = now.getMonth(), thisY = now.getFullYear();
+  const lastM = thisM===0?11:thisM-1, lastY = thisM===0?thisY-1:thisY;
+  const thisMonthSales = sales.filter(s=>{ const d=new Date(s.ts); return d.getMonth()===thisM&&d.getFullYear()===thisY; });
+  const lastMonthSales = sales.filter(s=>{ const d=new Date(s.ts); return d.getMonth()===lastM&&d.getFullYear()===lastY; });
+  const thisRev = thisMonthSales.reduce((a,s)=>a+s.amount,0);
+  const lastRev = lastMonthSales.reduce((a,s)=>a+s.amount,0);
+  const diff    = lastRev>0 ? Math.round(((thisRev-lastRev)/lastRev)*100) : null;
+  const arrow   = diff===null?'':diff>=0?`<span style="color:var(--green)">&#9650; ${diff}%</span>`:`<span style="color:var(--red)">&#9660; ${Math.abs(diff)}%</span>`;
+  const mNames  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px">${mNames[lastM]} (Last)</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text)">\u20A6${fmtMoney(lastRev)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">${lastMonthSales.length} deals</div>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(78,127,255,0.25);border-radius:14px;padding:14px 16px">
+      <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px">${mNames[thisM]} (This)</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text)">\u20A6${fmtMoney(thisRev)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">${thisMonthSales.length} deals ${arrow}</div>
+    </div>
+  </div>`;
 }
 
 // ── Theme ────────────────────────────────────────────────────
@@ -2015,6 +2255,8 @@ function setRptPerson(person, btn) {
   currentRptPerson = person;
   document.querySelectorAll('#page-reports .filter-chip').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  const exportPersonBtn = document.getElementById('btn-export-person');
+  if (exportPersonBtn) exportPersonBtn.style.display = (person && person !== 'all') ? '' : 'none';
   renderReports();
 }
 
