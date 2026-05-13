@@ -446,13 +446,6 @@
     border-radius:4px; text-transform:uppercase; letter-spacing:.4px;
     margin-left:4px; vertical-align:middle;
   }
-  /* ── APPROVED badge ── */
-  .approved-badge {
-    display:inline-block; background:rgba(34,199,106,0.12);
-    border:1px solid rgba(34,199,106,0.3); color:var(--green);
-    font-size:9px; font-weight:800; padding:1px 6px;
-    border-radius:4px; text-transform:uppercase; letter-spacing:.4px;
-  }
   /* ── SEARCH BAR ── */
   .feed-search-wrap {
     padding: 0 12px 10px;
@@ -494,9 +487,6 @@
   .comment-author { font-size:11px; font-weight:700; color:var(--accent); }
   .comment-text { font-size:13px; color:var(--text2); margin-top:2px; line-height:1.4; }
   .comment-time { font-size:10px; color:var(--muted); margin-top:2px; }
-  /* ── TARGET PROGRESS ── */
-  .target-bar-wrap { height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; margin-top:6px; }
-  .target-bar-fill { height:6px; border-radius:3px; transition:width .6s ease; }
 
   ::-webkit-scrollbar { width: 2px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -983,11 +973,9 @@ const TEAM = [
   { id: 'emeka', name: 'Chairman', role: 'Executive Oversight', pass: 'FioluTuyil@885', emoji: '\u{1F468}\u{1F3FE}\u200D\u{1F4BC}', color: '#f39c12' },
   { id: 'sola',  name: 'Admin',  role: 'Business Dev',  pass: 'Admin@887@885',  emoji: '\u{1F9D1}\u{1F3FD}\u200D\u{1F4BC}', color: '#1abc9c' },
 ];
-const DAILY_TARGET  = 50000;
 const OVERDUE_DAYS  = 30;
 let   announcements  = []; // loaded from Firebase
 let   salesComments  = {}; // { saleId: [{author,text,ts}] }
-let   approvedSales  = {}; // { saleId: true }
 let   currentTheme   = localStorage.getItem('salestrack_theme') || 'dark';
 
 const STORAGE_KEY  = 'salestrack_sales_v1';
@@ -1640,12 +1628,10 @@ function renderAdmin() {
     const seller = TEAM.find(m=>m.id===s.sellerId)||{name:'Unknown',emoji:'?',color:'#888'};
     const d = new Date(s.ts);
     const timeStr = d.toLocaleDateString('en-NG',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
-    const isApproved = !!approvedSales[s.id];
     return `<div style="background:var(--card);border-radius:14px;padding:12px 14px;border-left:4px solid ${seller.color};border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:16px">${seller.emoji}</span>
         <span style="font-weight:700;font-size:13px;color:var(--text)">${seller.name}</span>
-        ${isApproved?'<span class="approved-badge">Approved</span>':''}
         <span style="margin-left:auto;font-size:11px;color:var(--muted)">${timeStr}</span>
       </div>
       <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">${esc(s.client)}${s.product?' &bull; '+esc(s.product):''}</div>
@@ -1653,7 +1639,6 @@ function renderAdmin() {
         <span style="color:${seller.color};font-weight:700">₦${fmtMoney(s.amount)}</span>
         <span style="color:var(--muted)">${s.slots} slot${s.slots!==1?'s':''}</span>
         <span style="color:var(--muted)">${s.payment||'Cash'}</span>
-        <button onclick="approveSale('${s.id}')" style="margin-left:auto;background:${isApproved?'rgba(34,199,106,0.15)':'var(--card2)'};border:1px solid ${isApproved?'rgba(34,199,106,0.4)':'var(--border)'};color:${isApproved?'var(--green)':'var(--muted)'};font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer">${isApproved?'&#10003; Approved':'Approve'}</button>
       </div>
     </div>`;
   }).join('');
@@ -1773,7 +1758,6 @@ function buildSaleCard(s) {
       ${s.isNew
         ? `<span style="background:var(--green);color:#000;font-size:10px;font-weight:800;padding:0 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">New</span>`
         : `<span style="visibility:hidden;font-size:10px;padding:0 6px">New</span>`}
-      ${approvedSales[s.id] ? `<span class="approved-badge">Approved</span>` : ''}
     </div>
 
     <!-- body: avatar + left col + right col -->
@@ -2048,10 +2032,6 @@ function setupExtrasListener() {
   db.ref('salesComments').on('value', snap => {
     salesComments = snap.val() || {};
   });
-  db.ref('approvedSales').on('value', snap => {
-    approvedSales = snap.val() || {};
-    if (document.getElementById('screen-app').classList.contains('active')) renderFeed();
-  });
 }
 
 // ── Announcements ─────────────────────────────────────────────
@@ -2113,17 +2093,6 @@ function addComment(saleId) {
   db.ref('salesComments/'+saleId).push(comment)
     .then(() => { input.value = ''; toast('Comment added'); })
     .catch(() => toast('Failed to add comment'));
-}
-
-// ── Approve sales ─────────────────────────────────────────────
-function approveSale(id) {
-  if (!isAdmin()) return;
-  if (!firebaseReady()) { toast('Firebase required'); return; }
-  if (approvedSales[id]) {
-    db.ref('approvedSales/'+id).remove().then(() => toast('Approval removed'));
-  } else {
-    db.ref('approvedSales/'+id).set({ by: currentUser.id, ts: Date.now() }).then(() => toast('Sale approved!'));
-  }
 }
 
 
