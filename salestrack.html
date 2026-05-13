@@ -672,8 +672,6 @@
     <div class="slot-banner">
       <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-sold" style="color:var(--accent)">0</div><div class="slot-banner-lbl">My Slots</div></div>
       <div class="slot-divider"></div>
-      <div class="slot-banner-item"><div class="slot-banner-num" id="db-slots-remaining" style="color:var(--cyan)">100</div><div class="slot-banner-lbl">Slots Left</div></div>
-      <div class="slot-divider"></div>
       <div class="slot-banner-item"><div class="slot-banner-num" id="db-deals" style="color:var(--green)">0</div><div class="slot-banner-lbl">My Deals</div></div>
     </div>
 
@@ -1002,7 +1000,6 @@ const TEAM = [
   { id: 'sola',  name: 'Admin',  role: 'Business Dev',  pass: 'Admin@887@885',  emoji: '\u{1F9D1}\u{1F3FD}\u200D\u{1F4BC}', color: '#1abc9c' },
 ];
 const DAILY_TARGET  = 50000;
-const TOTAL_SLOTS   = 100;
 const OVERDUE_DAYS  = 30;
 let   monthlyTargets = {}; // { memberId: amount } loaded from Firebase
 let   announcements  = []; // loaded from Firebase
@@ -1848,11 +1845,7 @@ function renderDash() {
   sales.forEach(s=>{ if(byM[s.sellerId]){ byM[s.sellerId].rev+=s.amount; byM[s.sellerId].deals++; byM[s.sellerId].slots+=s.slots; } });
   const sorted = TEAM.filter(m=>m.id!=='emeka'&&m.id!=='sola').sort((a,b)=>byM[b.id].rev-byM[a.id].rev);
 
-  // Slots remaining (team total vs 100 limit)
-  const totalSlotsUsed = sales.reduce((a,s)=>a+s.slots,0);
-  const slotsLeft = Math.max(0, TOTAL_SLOTS - totalSlotsUsed);
   document.getElementById('db-slots-sold').textContent = mySlots;
-  document.getElementById('db-slots-remaining').textContent = slotsLeft;
   document.getElementById('db-deals').textContent = mySales.length;
   document.getElementById('db-revenue').textContent = '\u20A6'+fmtMoney(myRev);
   document.getElementById('db-today').textContent = '\u20A6'+fmtMoney(myTodayRev);
