@@ -845,6 +845,13 @@
       <button onclick="exportCSV('all')"   style="background:var(--accent);border:1.5px solid var(--accent);color:#000;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Export All</button>
       <button onclick="exportCSV('person')" id="btn-export-person" style="display:none;background:var(--purple);border:1.5px solid var(--purple);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">&#128229; Export Person</button>
     </div>
+    <!-- WhatsApp share report -->
+    <div style="padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+      <button onclick="shareReport('day')"   style="background:rgba(37,211,102,0.12);border:1.5px solid rgba(37,211,102,0.4);color:#25d366;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">📤 Daily</button>
+      <button onclick="shareReport('week')"  style="background:rgba(37,211,102,0.12);border:1.5px solid rgba(37,211,102,0.4);color:#25d366;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">📤 Weekly</button>
+      <button onclick="shareReport('month')" style="background:rgba(37,211,102,0.12);border:1.5px solid rgba(37,211,102,0.4);color:#25d366;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">📤 Monthly</button>
+      <button onclick="shareReport('all')"   style="background:rgba(37,211,102,0.12);border:1.5px solid rgba(37,211,102,0.4);color:#25d366;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer">📤 All</button>
+    </div>
     <!-- Stats -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 14px 14px">
       <div class="stat-card"><div class="stat-val" id="rpt-rev">₦0</div><div class="stat-lbl">Revenue</div></div>
@@ -1568,6 +1575,48 @@ function exportCSV(period) {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('Exported '+sorted.length+' '+label.toLowerCase()+' record'+(sorted.length!==1?'s':'')+'!');
+}
+
+// ── WhatsApp report summary ───────────────────────────────────
+function shareReport(period) {
+  if (!sales.length) { toast('No sales recorded yet'); return; }
+  var filtered = sales.slice();
+  if (currentRptPerson && currentRptPerson !== 'all') {
+    filtered = filtered.filter(function(s){ return s.sellerId === currentRptPerson; });
+  }
+  if (period && period !== 'all') {
+    var now = new Date(); var y=now.getFullYear(); var m=now.getMonth(); var d=now.getDate();
+    filtered = filtered.filter(function(s){
+      var t = new Date(s.ts);
+      if (period==='day')   return t.getFullYear()===y && t.getMonth()===m && t.getDate()===d;
+      if (period==='week')  { var ms=now-t; return ms>=0 && ms<=7*86400000; }
+      if (period==='month') return t.getFullYear()===y && t.getMonth()===m;
+      return true;
+    });
+  }
+  if (!filtered.length) { toast('No records for this period'); return; }
+  var label = period==='day'?'Daily':period==='week'?'Weekly':period==='month'?'Monthly':'All-Time';
+  var totalAmt = filtered.reduce(function(a,s){ return a+(s.amount||0); }, 0);
+  var totalSlots = filtered.reduce(function(a,s){ return a+(s.slots||0); }, 0);
+  var creditCount = filtered.filter(function(s){ return s.payment==='Credit'; }).length;
+  // Group by seller
+  var byPerson = {};
+  filtered.forEach(function(s){
+    var name = (TEAM.find(function(m){ return m.id===s.sellerId; })||{name:s.sellerId}).name;
+    if (!byPerson[name]) byPerson[name] = { count:0, amount:0 };
+    byPerson[name].count++; byPerson[name].amount += (s.amount||0);
+  });
+  var lines = Object.keys(byPerson).sort().map(function(n){
+    return '  • '+n+': ₦'+byPerson[n].amount.toLocaleString()+' ('+byPerson[n].count+' deal'+(byPerson[n].count!==1?'s':'')+')';
+  }).join('\n');
+  var text = '📊 *Diamond FM — '+label+' Sales Report*\n\n'
+    +'Total Revenue: ₦'+totalAmt.toLocaleString()+'\n'
+    +'Deals: '+filtered.length+'\n'
+    +'Slots: '+totalSlots+'\n'
+    +(creditCount?'Credit Sales: '+creditCount+'\n':'')
+    +'\n*By Staff:*\n'+lines
+    +'\n\n_SalesTrack · Diamond FM_';
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
 }
 
 var editingId = null;
