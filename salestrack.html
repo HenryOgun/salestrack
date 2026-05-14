@@ -1688,7 +1688,6 @@ function printInvoice(id) {
     ['Amount',   '\u20A6'+(s.amount||0).toLocaleString()],
     ['Payment',  s.payment||'Cash'],
     s.agency  ? ['Agency', s.agency] : null,
-    ['Renewal',  {yes:'\u2705 Renewing',no:'\u26D4 Not Renewing',pending:'Pending'}[s.renewal]||'\u2014'],
     ['Logged By', m.name],
     ['Date',     new Date(s.ts).toLocaleDateString('en-NG')],
     s.notes   ? ['Notes', s.notes]                       : null,
