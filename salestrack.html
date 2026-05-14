@@ -184,33 +184,15 @@
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.4)} }
 
   .sale-card {
-    margin: 0 12px 6px;
-    background: linear-gradient(145deg, var(--card), rgba(20,22,38,0.9));
-    border-radius: 16px;
+    margin: 0 12px 5px;
+    background: var(--card);
+    border-radius: 12px;
     border: 1px solid var(--border);
     overflow: hidden;
     animation: slideIn 0.3s cubic-bezier(.34,1.2,.64,1);
-    box-shadow: 0 2px 16px rgba(0,0,0,0.3);
     transition: transform 0.15s ease;
   }
-  @keyframes slideIn { from{opacity:0;transform:translateY(-10px) scale(0.98)} to{opacity:1;transform:translateY(0) scale(1)} }
-  .sale-card-top { padding: 9px 12px 4px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .sale-left { display: flex; gap: 8px; align-items: center; flex: 1; min-width: 0; }
-  .sale-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .sale-meta { flex: 1; min-width: 0; }
-  .sale-seller { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
-  .sale-client { font-size: 13px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sale-time { font-size: 12px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
-  .sale-card-body { padding: 3px 12px 9px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .sale-stat { display: flex; align-items: center; gap: 4px; background: none; }
-  .sale-stat-val { font-size: 15px; font-weight: 800; color: var(--text); }
-  .sale-stat-lbl { font-size: 11px; color: var(--muted); font-weight: 600; }
-  .sale-note {
-    margin: 0 12px 8px; padding: 5px 10px;
-    background: rgba(255,255,255,0.04); border-radius: 7px;
-    border-left: 3px solid var(--accent);
-    font-size: 13px; color: var(--text2); font-style: italic; line-height: 1.4;
-  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
   .sale-new-badge {
     display: inline-block; background: var(--green); color: #000;
     font-size: 10px; font-weight: 800; padding: 2px 6px;
@@ -1949,71 +1931,40 @@ function renderFeed() {
 function buildSaleCard(s) {
   const m    = TEAM.find(t => t.id === s.sellerId) || { name: s.sellerId, emoji: '\u{1F464}', color: '#888' };
   const isMe = s.sellerId === currentUser?.id;
-
-  /* Rows tight at 17px — same fonts, less air */
-  const R = 'display:block;height:17px;line-height:17px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;';
-
-  const details   = [s.pkg, s.duration].filter(Boolean).map(v => esc(v)).join(' \u00B7 ');
   const fmtDate = d => d ? d.split('-').reverse().join('-') : '?';
-  const dateStr   = (s.startDate||s.endDate) ? `\uD83D\uDCC5 ${fmtDate(s.startDate)} \u2192 ${fmtDate(s.endDate)}` : '\u00A0';
-  const noteStr   = s.notes ? `"${esc(s.notes)}"` : '\u00A0';
-  const detailStr = details || '\u00A0';
-  const clientStr = s.client
-    ? `<span onclick="event.stopPropagation();showClientHistory('${s.client.replace(/'/g,"\\'")}')" style="text-decoration:underline;text-underline-offset:2px;cursor:pointer">${esc(s.client)}</span>${s.product?' \u00B7 '+esc(s.product):''}`
-    : '\u00A0';
 
-  const renewIcon  = { yes:'\u2705', no:'\u26D4', pending:'\u{1F550}' };
-  const renewColor = { yes:'var(--green)', no:'var(--red)', pending:'var(--yellow)' };
-  const renewStr   = (s.renewal&&s.renewal!=='unknown')
-    ? `<span style="color:${renewColor[s.renewal]}">${renewIcon[s.renewal]}</span>`
-    : `<span style="visibility:hidden">\u2705</span>`;
+  const clientPart = s.client
+    ? `<span onclick="event.stopPropagation();showClientHistory('${s.client.replace(/'/g,"\\'")}')" style="text-decoration:underline;text-underline-offset:2px;cursor:pointer">${esc(s.client)}</span>`
+    : '';
+  const line1 = [m.name + (isMe ? ' <span style="color:var(--muted);font-size:10px;font-weight:400">(you)</span>' : ''), clientPart, s.product ? esc(s.product) : ''].filter(Boolean).join(' \u00B7 ');
+  const line2parts = [s.pkg ? esc(s.pkg) : '', s.duration ? esc(s.duration) : '', s.slots ? s.slots+' slot'+(s.slots!==1?'s':'') : '', (s.startDate||s.endDate) ? fmtDate(s.startDate)+' \u2192 '+fmtDate(s.endDate) : ''].filter(Boolean);
+  const line2 = line2parts.join(' \u00B7 ');
 
-  return `<div class="sale-card" data-sale-id="${s.id}" style="border-left:3px solid ${m.color};cursor:pointer" onclick="openDetail('${s.id}',event)">
+  const cs = getCampaignStatus(s);
+  const renewIcon = { yes:'\u2705', no:'\u26D4', pending:'\u{1F550}' }[s.renewal] || '';
+  const creditBtn = s.payment==='Credit' && isMe
+    ? `<button onclick="markPaid('${s.id}')" style="font-size:10px;font-weight:700;color:var(--yellow);background:rgba(240,180,41,0.15);border:1px solid rgba(240,180,41,0.4);padding:1px 5px;border-radius:3px;cursor:pointer;line-height:1.4">CREDIT</button>`
+    : s.payment==='Credit' ? `<span style="font-size:10px;font-weight:700;color:var(--yellow)">Credit</span>` : '';
 
-    <!-- badge row: always 16px -->
-    <div style="height:16px;display:flex;align-items:center;gap:4px;padding:0 10px">
-      ${s.isNew
-        ? `<span style="background:var(--green);color:#000;font-size:10px;font-weight:800;padding:0 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">New</span>`
-        : `<span style="visibility:hidden;font-size:10px;padding:0 6px">New</span>`}
-      ${(()=>{const cs=getCampaignStatus(s);return cs?`<span class="status-badge status-${cs.cls}">${cs.label}</span>`:'';})()}
-      ${s.payment==='Credit'?`<span style="font-size:10px;color:var(--yellow);font-weight:700">${creditAgeDays(s)}d old</span>`:''}
+  return `<div class="sale-card" data-sale-id="${s.id}" style="border-left:3px solid ${m.color};cursor:pointer;padding:9px 10px 8px 12px" onclick="openDetail('${s.id}',event)">
+    <!-- row 1: emoji · names · amount / time -->
+    <div style="display:flex;align-items:center;gap:7px">
+      <span style="font-size:16px;flex-shrink:0">${m.emoji}</span>
+      <div style="flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;font-weight:700;color:var(--text)">${line1}</div>
+      <div style="flex-shrink:0;text-align:right">
+        <div style="font-size:13px;font-weight:800;color:var(--green)">&#8358;${fmtMoney(s.amount)}</div>
+        <div style="font-size:10px;color:var(--muted)">${relTime(s.ts)}</div>
+      </div>
     </div>
-
-    <!-- body: avatar + left col + right col -->
-    <div style="display:flex;gap:8px;align-items:flex-start;padding:1px 10px 6px">
-
-      <div style="width:28px;height:28px;border-radius:50%;background:${m.color}22;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:1px">${m.emoji}</div>
-
-      <!-- left: 5 rows × 17px = 85px -->
-      <div style="flex:1;min-width:0">
-        <div style="${R}font-size:14px;font-weight:700;color:var(--text)">${m.name}${isMe?' <span style="color:var(--muted);font-weight:400;font-size:11px">(you)</span>':''}</div>
-        <div style="${R}font-size:13px;color:var(--text2)">${clientStr}</div>
-        <div style="${R}font-size:12px;color:var(--muted)">${detailStr}</div>
-        <div style="${R}font-size:12px;color:var(--muted);font-weight:600">${dateStr}</div>
-        <div style="${R}font-size:12px;color:var(--muted);font-style:italic;padding-left:5px;border-left:2px solid ${s.notes?'var(--accent)':'transparent'}">${noteStr}</div>
-      </div>
-
-      <!-- right: 6 items × 17px = 102px -->
-      <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0">
-        <div style="${R}font-size:11px;color:var(--muted)">${relTime(s.ts)}</div>
-        <div style="${R}font-size:14px;font-weight:800;color:var(--green)">₦${fmtMoney(s.amount)}</div>
-        <div style="${R}font-size:12px;font-weight:600;color:var(--accent)">${s.slots} slot${s.slots!==1?'s':''}</div>
-        <div style="${R}font-size:12px">${renewStr}</div>
-        <div style="${R}font-size:11px;font-weight:700">
-          ${s.payment==='Credit' && isMe
-            ? `<button onclick="markPaid('${s.id}')" style="height:16px;line-height:1;background:rgba(240,180,41,0.15);border:1px solid rgba(240,180,41,0.4);color:var(--yellow);font-size:10px;font-weight:700;padding:0 7px;border-radius:4px;cursor:pointer">CREDIT · Tap to Pay</button>`
-            : s.payment==='Credit'
-              ? `<span style="color:var(--yellow)">Credit</span>`
-              : `<span style="visibility:hidden">-</span>`}
-        </div>
-        <div style="display:flex;gap:4px;margin-top:1px">
-          <button onclick="${isMe?`openEdit('${s.id}')`:'void(0)'}"
-            style="height:17px;line-height:1;background:none;border:1px solid ${isMe?'var(--border)':'transparent'};color:${isMe?'var(--muted)':'transparent'};font-size:11px;font-weight:700;padding:0 7px;border-radius:4px;cursor:${isMe?'pointer':'default'}">&#9998; Edit</button>
-          <button onclick="${isMe?`deleteSale('${s.id}')`:'void(0)'}"
-            style="height:17px;line-height:1;background:none;border:1px solid ${isMe?'var(--red)':'transparent'};color:${isMe?'var(--red)':'transparent'};font-size:11px;font-weight:700;padding:0 7px;border-radius:4px;cursor:${isMe?'pointer':'default'}">&#128465;</button>
-        </div>
-      </div>
-
+    <!-- row 2: details · action strip -->
+    <div style="display:flex;align-items:center;gap:6px;margin-top:3px;padding-left:23px">
+      <span style="flex:1;font-size:11px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${line2}</span>
+      ${s.isNew?'<span style="background:var(--green);color:#000;font-size:9px;font-weight:800;padding:0 4px;border-radius:3px">NEW</span>':''}
+      ${cs?`<span class="status-badge status-${cs.cls}">${cs.label}</span>`:''}
+      ${renewIcon?`<span style="font-size:11px">${renewIcon}</span>`:''}
+      ${creditBtn}
+      ${isMe?`<button onclick="openEdit('${s.id}')" style="font-size:10px;color:var(--muted);background:none;border:1px solid var(--border);padding:1px 5px;border-radius:3px;cursor:pointer;line-height:1.4">&#9998;</button>
+      <button onclick="deleteSale('${s.id}')" style="font-size:10px;color:var(--red);background:none;border:1px solid var(--red);padding:1px 4px;border-radius:3px;cursor:pointer;line-height:1.4">&#128465;</button>`:''}
     </div>
   </div>`;
 }
