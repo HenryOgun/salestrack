@@ -518,14 +518,6 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(78,127,255,0.2); border-radius: 2px; }
 
-  /* ── Pipeline stage ── */
-  .stage-pill{display:inline-block;font-size:10px;font-weight:800;padding:1px 7px;border-radius:4px;letter-spacing:.4px}
-  .stage-pill.pending{background:rgba(240,180,41,.15);color:var(--yellow)}
-  .stage-pill.negotiating{background:rgba(157,107,242,.15);color:var(--purple)}
-  .stage-btn{flex:1;padding:10px 4px;background:var(--card);border:2px solid var(--border);border-radius:12px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;transition:var(--transition);text-align:center}
-  .stage-btn.s-pending{border-color:var(--yellow);background:rgba(240,180,41,.1);color:var(--yellow)}
-  .stage-btn.s-negotiating{border-color:var(--purple);background:rgba(157,107,242,.1);color:var(--purple)}
-  .stage-btn.s-closed{border-color:var(--green);background:rgba(34,199,106,.1);color:var(--green)}
   /* ── Invoice print ── */
   #invoice-print{display:none}
   @media print{body>*:not(#invoice-print){display:none!important}#invoice-print{display:block!important;color:#000;font-family:sans-serif;padding:32px;font-size:14px}}
@@ -689,7 +681,6 @@
       <button class="filter-chip"        data-filter="Transfer" onclick="setFeedFilter('Transfer',this)">Transfer</button>
       <button class="filter-chip"        data-filter="Credit" onclick="setFeedFilter('Credit',this)">Credit</button>
       <button class="filter-chip"        data-filter="overdue"    onclick="setFeedFilter('overdue',this)">Overdue</button>
-      <button class="filter-chip"        data-filter="pipeline"   onclick="setFeedFilter('pipeline',this)">&#128101; Pipeline</button>
     </div>
     <div id="feed-list"></div>
   </div>
@@ -823,14 +814,6 @@
           <span style="font-size:20px">&#128336;</span>
           <div><div style="font-weight:600;font-size:13px;color:var(--text)">Pending</div><div style="font-size:11px;color:var(--muted)">Deciding</div></div>
         </label>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label" style="margin-bottom:10px">Pipeline Stage</label>
-      <div style="display:flex;gap:8px">
-        <button type="button" class="stage-btn" id="fs-pending"     onclick="setStage('pending')">\u23F3 Pending</button>
-        <button type="button" class="stage-btn" id="fs-negotiating" onclick="setStage('negotiating')">\uD83E\uDD1D Negotiating</button>
-        <button type="button" class="stage-btn s-closed" id="fs-closed" onclick="setStage('closed')">\u2705 Closed</button>
       </div>
     </div>
     <div class="form-group">
@@ -1032,13 +1015,6 @@
           <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer" id="er-yes-lbl"><input type="radio" name="e-renewal" id="er-yes" value="yes" onchange="setEditRenewal('yes')" style="display:none"><span style="font-size:18px">&#9989;</span><div><div style="font-weight:600;font-size:12px;color:var(--text)">Yes</div></div></label>
           <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer" id="er-no-lbl"><input type="radio" name="e-renewal" id="er-no" value="no" onchange="setEditRenewal('no')" style="display:none"><span style="font-size:18px">&#9940;</span><div><div style="font-weight:600;font-size:12px;color:var(--text)">No</div></div></label>
           <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer" id="er-pending-lbl"><input type="radio" name="e-renewal" id="er-pending" value="pending" onchange="setEditRenewal('pending')" style="display:none"><span style="font-size:18px">&#128336;</span><div><div style="font-weight:600;font-size:12px;color:var(--text)">Pending</div></div></label>
-        </div>
-      </div>
-      <div class="form-group"><label class="form-label" style="margin-bottom:10px">Pipeline Stage</label>
-        <div style="display:flex;gap:8px">
-          <button type="button" class="stage-btn" id="es-pending"     onclick="setEditStage('pending')">\u23F3 Pending</button>
-          <button type="button" class="stage-btn" id="es-negotiating" onclick="setEditStage('negotiating')">\uD83E\uDD1D Negotiating</button>
-          <button type="button" class="stage-btn s-closed" id="es-closed" onclick="setEditStage('closed')">\u2705 Closed</button>
         </div>
       </div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="e-notes"></textarea></div>
@@ -1694,24 +1670,6 @@ function printInvoice(id) {
   setTimeout(function(){ window.print(); }, 120);
 }
 
-// ── Pipeline stage ────────────────────────────────────────────
-let selectedStage = 'closed';
-function setStage(val) {
-  selectedStage = val;
-  ['pending','negotiating','closed'].forEach(function(v) {
-    var btn = document.getElementById('fs-'+v);
-    if (btn) btn.className = 'stage-btn' + (v===val ? ' s-'+v : '');
-  });
-}
-let editStage = 'closed';
-function setEditStage(val) {
-  editStage = val;
-  ['pending','negotiating','closed'].forEach(function(v) {
-    var btn = document.getElementById('es-'+v);
-    if (btn) btn.className = 'stage-btn' + (v===val ? ' s-'+v : '');
-  });
-}
-
 // ── Custom Ad Packages ────────────────────────────────────────
 function loadCustomPkgs() {
   try { customPackages = JSON.parse(localStorage.getItem(CUSTOM_PKG_KEY) || '[]'); } catch(e) { customPackages = []; }
@@ -1774,8 +1732,6 @@ function openEdit(id) {
   document.getElementById('e-agency').value    = s.agency||'';
   document.getElementById('e-agency-wrap').style.display = s.payment==='Credit'?'block':'none';
   document.getElementById('e-notes').value     = s.notes||'';
-  editStage = s.stage || 'closed';
-  setEditStage(editStage);
   ['yes','no','pending'].forEach(function(v){
     document.getElementById('er-'+v+'-lbl').style.borderColor = v===editRenewal?'var(--accent)':'var(--border)';
     document.getElementById('er-'+v+'-lbl').style.background  = v===editRenewal?'rgba(91,155,255,0.1)':'var(--card)';
@@ -1828,7 +1784,6 @@ function saveEdit() {
     agency:    payment==='Credit'?document.getElementById('e-agency').value.trim():'',
     renewal:   editRenewal||'unknown',
     notes:     document.getElementById('e-notes').value.trim(),
-    stage:     editStage || 'closed',
     edited:    true
   });
   saveSales();
@@ -1934,7 +1889,7 @@ function submitSale() {
     id: Date.now().toString(36)+Math.random().toString(36).slice(2,5),
     sellerId: currentUser.id, client, product, pkg, duration, slots,
     startDate, endDate, amount, payment, agency, renewal, notes,
-    stage: selectedStage || 'closed', ts: Date.now(), isNew: true
+    ts: Date.now(), isNew: true
   };
   sales.unshift(sale); saveSales(); broadcast('NEW_SALE', { sale });
   ['f-client','f-product','f-notes','f-agency'].forEach(id => document.getElementById(id).value = '');
@@ -1945,7 +1900,6 @@ function submitSale() {
   document.getElementById('f-end-date').value   = '';
   document.getElementById('f-agency-wrap').style.display = 'none';
   selectedRenewal = '';
-  setStage('closed');
   ['yes','no','pending'].forEach(v => {
     document.getElementById('renew-'+v+'-lbl').style.borderColor = 'var(--border)';
     document.getElementById('renew-'+v+'-lbl').style.background  = 'var(--card)';
@@ -1974,7 +1928,6 @@ function renderFeed() {
     if (currentFeedFilter === 'Transfer') return s.payment === 'Transfer';
     if (currentFeedFilter === 'Credit')   return s.payment === 'Credit';
     if (currentFeedFilter === 'overdue')  return s.payment === 'Credit' && (now-s.ts) > OVERDUE_DAYS*86400000;
-    if (currentFeedFilter === 'pipeline') return s.stage && s.stage !== 'closed';
     return true;
   });
   if (query) {
@@ -2023,7 +1976,6 @@ function buildSaleCard(s) {
         ? `<span style="background:var(--green);color:#000;font-size:10px;font-weight:800;padding:0 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">New</span>`
         : `<span style="visibility:hidden;font-size:10px;padding:0 6px">New</span>`}
       ${(()=>{const cs=getCampaignStatus(s);return cs?`<span class="status-badge status-${cs.cls}">${cs.label}</span>`:'';})()}
-      ${s.stage&&s.stage!=='closed'?`<span class="stage-pill ${s.stage}">${s.stage==='pending'?'\u23F3':'\uD83E\uDD1D'} ${s.stage}</span>`:''}
       ${s.payment==='Credit'?`<span style="font-size:10px;color:var(--yellow);font-weight:700">${creditAgeDays(s)}d old</span>`:''}
     </div>
 
@@ -2222,7 +2174,6 @@ function openDetail(id, e) {
     ['Payment',   `<span style="color:${payColor};font-weight:700">${s.payment || 'Cash'}</span>`],
     s.agency ? ['Agency', esc(s.agency)] : null,
     ['Renewal',   renewLabel[s.renewal] || '—'],
-    s.stage && s.stage !== 'closed' ? ['Pipeline', `<span class="stage-pill ${s.stage}">${s.stage==='pending'?'\u23F3':'\uD83E\uDD1D'} ${s.stage}</span>`] : null,
     s.notes ? ['Notes', `<em style="color:var(--text2)">"${esc(s.notes)}"</em>`] : null,
     s.paidAt ? ['Paid On', `<span style="color:var(--green)">${new Date(s.paidAt).toLocaleDateString('en-NG')}</span>${s.paidNote?` <em style="color:var(--text2)">&ldquo;${esc(s.paidNote)}&rdquo;</em>`:''}`] : null,
     ['Logged',    relTime(s.ts)],
