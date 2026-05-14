@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,12 +27,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Set up Android SDK (find sdkmanager wherever it lives)
+      - name: Set up Android SDK
         run: |
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f 2>/dev/null | head -1)
           if [ -z "$SDKMANAGER" ]; then
-            echo "sdkmanager not found, listing ANDROID_HOME:"
-            ls "$ANDROID_HOME/" || echo "ANDROID_HOME=$ANDROID_HOME is empty or unset"
+            echo "sdkmanager not found. ANDROID_HOME=$ANDROID_HOME"
+            ls "$ANDROID_HOME/" || true
             exit 1
           fi
           echo "Found sdkmanager at: $SDKMANAGER"
@@ -55,9 +58,8 @@ jobs:
             -noprompt
 
       - name: Init Android TWA project
-        run: bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
-        env:
-          CI: 'true'
+        # Answer "n" to JDK install (we have Java 17), then Enter for all remaining prompts
+        run: printf 'n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n' | bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
 
       - name: Build APK
         run: printf 'salestrack\nsalestrack\n' | bubblewrap build --skipPwaShellUpdate
