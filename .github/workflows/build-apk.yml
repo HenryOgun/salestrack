@@ -24,15 +24,19 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Bubblewrap CLI
-        run: npm install -g @bubblewrap/cli
+      - name: Add Android SDK tools to PATH
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
       - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Install required Android SDK components
-        run: |
-          sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools"
+      - name: Install Android SDK components
+        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.0" "platforms;android-33"
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
 
       - name: Generate signing keystore
         run: |
@@ -48,8 +52,7 @@ jobs:
             -noprompt
 
       - name: Init Android TWA project
-        run: |
-          bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
+        run: bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
         env:
           CI: 'true'
 
