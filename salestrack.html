@@ -517,6 +517,18 @@
   ::-webkit-scrollbar { width: 2px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(78,127,255,0.2); border-radius: 2px; }
+
+  /* ── Pipeline stage ── */
+  .stage-pill{display:inline-block;font-size:10px;font-weight:800;padding:1px 7px;border-radius:4px;letter-spacing:.4px}
+  .stage-pill.pending{background:rgba(240,180,41,.15);color:var(--yellow)}
+  .stage-pill.negotiating{background:rgba(157,107,242,.15);color:var(--purple)}
+  .stage-btn{flex:1;padding:10px 4px;background:var(--card);border:2px solid var(--border);border-radius:12px;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;transition:var(--transition);text-align:center}
+  .stage-btn.s-pending{border-color:var(--yellow);background:rgba(240,180,41,.1);color:var(--yellow)}
+  .stage-btn.s-negotiating{border-color:var(--purple);background:rgba(157,107,242,.1);color:var(--purple)}
+  .stage-btn.s-closed{border-color:var(--green);background:rgba(34,199,106,.1);color:var(--green)}
+  /* ── Invoice print ── */
+  #invoice-print{display:none}
+  @media print{body>*:not(#invoice-print){display:none!important}#invoice-print{display:block!important;color:#000;font-family:sans-serif;padding:32px;font-size:14px}}
 </style>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -676,7 +688,8 @@
       <button class="filter-chip"        data-filter="Cash"   onclick="setFeedFilter('Cash',this)">Cash</button>
       <button class="filter-chip"        data-filter="Transfer" onclick="setFeedFilter('Transfer',this)">Transfer</button>
       <button class="filter-chip"        data-filter="Credit" onclick="setFeedFilter('Credit',this)">Credit</button>
-      <button class="filter-chip"        data-filter="overdue" onclick="setFeedFilter('overdue',this)">Overdue</button>
+      <button class="filter-chip"        data-filter="overdue"    onclick="setFeedFilter('overdue',this)">Overdue</button>
+      <button class="filter-chip"        data-filter="pipeline"   onclick="setFeedFilter('pipeline',this)">&#128101; Pipeline</button>
     </div>
     <div id="feed-list"></div>
   </div>
@@ -813,6 +826,14 @@
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label" style="margin-bottom:10px">Pipeline Stage</label>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="stage-btn" id="fs-pending"     onclick="setStage('pending')">\u23F3 Pending</button>
+        <button type="button" class="stage-btn" id="fs-negotiating" onclick="setStage('negotiating')">\uD83E\uDD1D Negotiating</button>
+        <button type="button" class="stage-btn s-closed" id="fs-closed" onclick="setStage('closed')">\u2705 Closed</button>
+      </div>
+    </div>
+    <div class="form-group">
       <label class="form-label">Notes (optional)</label>
       <textarea class="form-textarea" id="f-notes" placeholder="Any extra context about this deal..."></textarea>
     </div>
@@ -931,6 +952,15 @@
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Team Breakdown</div>
       <div id="adm-team-breakdown"></div>
     </div>
+    <!-- Manage Ad Types -->
+    <div style="padding:14px 16px 0">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Manage Ad Types</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="adm-pkg-input" class="form-input" type="text" placeholder="New ad type name..." style="flex:1">
+        <button onclick="addCustomPkg()" style="padding:11px 16px;background:var(--accent);border:none;color:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">Add</button>
+      </div>
+      <div id="adm-pkg-list"></div>
+    </div>
     <!-- Announcements Composer -->
     <div style="padding:14px 16px 0">
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Post Announcement</div>
@@ -1004,11 +1034,53 @@
           <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:11px 12px;cursor:pointer" id="er-pending-lbl"><input type="radio" name="e-renewal" id="er-pending" value="pending" onchange="setEditRenewal('pending')" style="display:none"><span style="font-size:18px">&#128336;</span><div><div style="font-weight:600;font-size:12px;color:var(--text)">Pending</div></div></label>
         </div>
       </div>
+      <div class="form-group"><label class="form-label" style="margin-bottom:10px">Pipeline Stage</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="stage-btn" id="es-pending"     onclick="setEditStage('pending')">\u23F3 Pending</button>
+          <button type="button" class="stage-btn" id="es-negotiating" onclick="setEditStage('negotiating')">\uD83E\uDD1D Negotiating</button>
+          <button type="button" class="stage-btn s-closed" id="es-closed" onclick="setEditStage('closed')">\u2705 Closed</button>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="e-notes"></textarea></div>
       <div style="padding:0 14px"><button onclick="saveEdit()" style="width:100%;padding:17px;background:var(--accent);color:#fff;border:none;border-radius:16px;font-size:17px;font-weight:800;cursor:pointer">&#10003; Save Changes</button></div>
     </div>
   </div>
 </div>
+
+<!-- PAY CREDIT MODAL -->
+<div id="pay-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div style="min-height:100%;display:flex;align-items:flex-end;padding-top:60px">
+    <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;padding:0 0 40px;animation:slideUp .3s ease">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 12px">
+        <div style="font-size:17px;font-weight:800;color:var(--text)">&#128176; Mark Credit Paid</div>
+        <button onclick="closePayModal()" style="background:var(--card);border:none;color:var(--muted);font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer">&times;</button>
+      </div>
+      <input type="hidden" id="pay-sale-id">
+      <div class="form-group">
+        <label class="form-label" style="margin-bottom:10px">Payment Method</label>
+        <div style="display:flex;gap:10px">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--accent);border-radius:12px;padding:12px;cursor:pointer" id="pay-cash-lbl">
+            <input type="radio" name="pay-type" id="pay-cash" value="Cash" onchange="selectPayType('Cash')" style="display:none">
+            <span style="font-size:18px">&#128181;</span><div style="font-size:13px;font-weight:700;color:var(--text)">Cash</div>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:12px;cursor:pointer" id="pay-transfer-lbl">
+            <input type="radio" name="pay-type" id="pay-transfer" value="Transfer" onchange="selectPayType('Transfer')" style="display:none">
+            <span style="font-size:18px">&#127968;</span><div style="font-size:13px;font-weight:700;color:var(--text)">Transfer</div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Note (optional)</label>
+        <textarea class="form-textarea" id="pay-note" placeholder="e.g. Cheque received, bank transfer confirmed, ref: 12345..."></textarea>
+      </div>
+      <div style="padding:0 14px">
+        <button onclick="confirmPayCredit()" style="width:100%;padding:16px;background:var(--green);color:#000;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer">&#10004; Confirm Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- INVOICE PRINT -->
+<div id="invoice-print"></div>
 
 <script>
 // TEAM CONFIG
@@ -1025,7 +1097,10 @@ let   salesComments  = {}; // { saleId: [{author,text,ts}] }
 let   currentTheme   = localStorage.getItem('salestrack_theme') || 'dark';
 
 const STORAGE_KEY  = 'salestrack_sales_v1';
-const CHANNEL_NAME = 'salestrack_sync';
+const CHANNEL_NAME  = 'salestrack_sync';
+const CUSTOM_PKG_KEY = 'salestrack_packages';
+const DEFAULT_PACKAGES = ['Jingle','Commercial','Political Jingle','Political Programme','Religious','Personal Announcement','Corporate Announcement','Hype','Studio Recording','Jingle Production','Off Air Dubs','Others'];
+let customPackages = [];
 
 // ─── FIREBASE CONFIG ────────────────────────────────────────────────────────
 const FIREBASE_CONFIG = {
@@ -1049,6 +1124,7 @@ const DEVICE_KEY = 'salestrack_device';
 
 function init() {
   applyTheme();
+  loadCustomPkgs(); populatePkgSelects();
   loadSales(); setupChannel();
   const loggedIn = localStorage.getItem('salestrack_user');
   const device   = localStorage.getItem(DEVICE_KEY);
@@ -1543,16 +1619,142 @@ function deleteSale(id) {
   toast('Sale deleted');
 }
 
-function markPaid(id) {
+function markPaid(id) { openPayModal(id); }
+
+// ── Pay Credit Modal ──────────────────────────────────────────
+let selectedPayType = 'Cash';
+function openPayModal(id) {
+  document.getElementById('pay-sale-id').value = id;
+  document.getElementById('pay-note').value = '';
+  selectPayType('Cash');
+  document.getElementById('pay-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closePayModal() {
+  document.getElementById('pay-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function selectPayType(type) {
+  selectedPayType = type;
+  ['Cash','Transfer'].forEach(function(t) {
+    var lbl = document.getElementById('pay-'+t.toLowerCase()+'-lbl');
+    if (lbl) lbl.style.borderColor = t===type ? 'var(--accent)' : 'var(--border)';
+  });
+  var radio = document.getElementById('pay-'+type.toLowerCase());
+  if (radio) radio.checked = true;
+}
+function confirmPayCredit() {
+  var id   = document.getElementById('pay-sale-id').value;
+  var note = document.getElementById('pay-note').value.trim();
   var s = sales.find(function(x){ return x.id===id; });
-  if (!s) return;
-  var type = confirm('Mark as Cash payment?\nCancel to mark as Transfer instead.');
-  s.payment = type ? 'Cash' : 'Transfer';
-  s.edited = true;
+  if (!s) { closePayModal(); return; }
+  s.payment = selectedPayType;
+  s.paidAt  = Date.now();
+  s.paidNote = note;
+  s.edited   = true;
   saveSales();
   broadcast('NEW_SALE', { sale: s });
+  closePayModal();
   refreshAll();
-  toast('Marked as ' + s.payment + ' ✔');
+  toast('Marked as ' + s.payment + ' \u2714' + (note ? ' \u00B7 ' + note : ''));
+}
+
+// ── Invoice / PDF Print ───────────────────────────────────────
+function printInvoice(id) {
+  var s = sales.find(function(x){ return x.id===id; });
+  if (!s) return;
+  var m  = TEAM.find(function(t){ return t.id===s.sellerId; }) || { name: s.sellerId };
+  var fd = function(d){ return d ? d.split('-').reverse().join('/') : '\u2014'; };
+  var rows = [
+    ['Client',   s.client||'\u2014'],
+    ['Brand',    s.product||'\u2014'],
+    ['Ad Type',  s.pkg||'\u2014'],
+    ['Duration', s.duration||'\u2014'],
+    ['Slots',    s.slots],
+    ['Period',   fd(s.startDate)+' \u2013 '+fd(s.endDate)],
+    ['Amount',   '\u20A6'+(s.amount||0).toLocaleString()],
+    ['Payment',  s.payment||'Cash'],
+    s.agency  ? ['Agency', s.agency] : null,
+    ['Renewal',  {yes:'\u2705 Renewing',no:'\u26D4 Not Renewing',pending:'Pending'}[s.renewal]||'\u2014'],
+    ['Logged By', m.name],
+    ['Date',     new Date(s.ts).toLocaleDateString('en-NG')],
+    s.notes   ? ['Notes', s.notes]                       : null,
+    s.paidAt  ? ['Paid On', new Date(s.paidAt).toLocaleDateString('en-NG')+(s.paidNote?' \u2014 '+s.paidNote:'')] : null,
+  ].filter(Boolean);
+  var el = document.getElementById('invoice-print');
+  el.innerHTML = '<div style="border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:20px">'
+    +'<div style="font-size:22px;font-weight:900">Diamond FM</div>'
+    +'<div style="font-size:13px;color:#555">Sales Invoice &bull; '+new Date().toLocaleDateString('en-NG')+'</div>'
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +rows.map(function(r){ return '<tr style="border-bottom:1px solid #eee"><td style="padding:8px 12px 8px 0;font-weight:700;color:#333;width:35%">'+r[0]+'</td><td style="padding:8px 0">'+r[1]+'</td></tr>'; }).join('')
+    +'</table>'
+    +'<div style="margin-top:24px;font-size:11px;color:#888;border-top:1px solid #eee;padding-top:10px">SalesTrack &bull; Diamond FM &bull; Confidential</div>';
+  closeDetail();
+  setTimeout(function(){ window.print(); }, 120);
+}
+
+// ── Pipeline stage ────────────────────────────────────────────
+let selectedStage = 'closed';
+function setStage(val) {
+  selectedStage = val;
+  ['pending','negotiating','closed'].forEach(function(v) {
+    var btn = document.getElementById('fs-'+v);
+    if (btn) btn.className = 'stage-btn' + (v===val ? ' s-'+v : '');
+  });
+}
+let editStage = 'closed';
+function setEditStage(val) {
+  editStage = val;
+  ['pending','negotiating','closed'].forEach(function(v) {
+    var btn = document.getElementById('es-'+v);
+    if (btn) btn.className = 'stage-btn' + (v===val ? ' s-'+v : '');
+  });
+}
+
+// ── Custom Ad Packages ────────────────────────────────────────
+function loadCustomPkgs() {
+  try { customPackages = JSON.parse(localStorage.getItem(CUSTOM_PKG_KEY) || '[]'); } catch(e) { customPackages = []; }
+}
+function saveCustomPkgs() { localStorage.setItem(CUSTOM_PKG_KEY, JSON.stringify(customPackages)); }
+function allPackages() { return DEFAULT_PACKAGES.concat(customPackages); }
+function populatePkgSelects() {
+  var pkgs = allPackages();
+  ['f-package','e-package'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">\u2014 Select ad type \u2014</option>'
+      + pkgs.map(function(p){ return '<option value="'+esc(p)+'">'+esc(p)+'</option>'; }).join('');
+    sel.value = cur;
+  });
+}
+function addCustomPkg() {
+  var inp  = document.getElementById('adm-pkg-input');
+  var name = inp.value.trim();
+  if (!name) { toast('Enter a name'); return; }
+  if (allPackages().map(function(p){ return p.toLowerCase(); }).indexOf(name.toLowerCase()) !== -1) { toast('Already exists'); return; }
+  customPackages.push(name);
+  saveCustomPkgs(); populatePkgSelects(); inp.value = '';
+  renderAdminPkgs(); toast('Ad type added');
+}
+function deleteCustomPkg(idx) {
+  customPackages.splice(idx,1);
+  saveCustomPkgs(); populatePkgSelects(); renderAdminPkgs();
+}
+function renderAdminPkgs() {
+  var el = document.getElementById('adm-pkg-list');
+  if (!el) return;
+  if (!customPackages.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">No custom types yet. Defaults are always shown.</div>';
+    return;
+  }
+  el.innerHTML = customPackages.map(function(p,i){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:6px">'
+      +'<span style="font-size:13px;color:var(--text)">'+esc(p)+'</span>'
+      +'<button onclick="deleteCustomPkg('+i+')" style="background:none;border:none;color:var(--red);font-size:18px;line-height:1;cursor:pointer;padding:0 4px">&times;</button>'
+      +'</div>';
+  }).join('');
 }
 
 function openEdit(id) {
@@ -1572,6 +1774,8 @@ function openEdit(id) {
   document.getElementById('e-agency').value    = s.agency||'';
   document.getElementById('e-agency-wrap').style.display = s.payment==='Credit'?'block':'none';
   document.getElementById('e-notes').value     = s.notes||'';
+  editStage = s.stage || 'closed';
+  setEditStage(editStage);
   ['yes','no','pending'].forEach(function(v){
     document.getElementById('er-'+v+'-lbl').style.borderColor = v===editRenewal?'var(--accent)':'var(--border)';
     document.getElementById('er-'+v+'-lbl').style.background  = v===editRenewal?'rgba(91,155,255,0.1)':'var(--card)';
@@ -1624,6 +1828,7 @@ function saveEdit() {
     agency:    payment==='Credit'?document.getElementById('e-agency').value.trim():'',
     renewal:   editRenewal||'unknown',
     notes:     document.getElementById('e-notes').value.trim(),
+    stage:     editStage || 'closed',
     edited:    true
   });
   saveSales();
@@ -1671,6 +1876,7 @@ function renderAdmin() {
 
   // Render announcements
   renderAdminAnnouncements();
+  renderAdminPkgs();
 
   const txList = document.getElementById('adm-tx-list');
   if (!sales.length) {
@@ -1728,7 +1934,7 @@ function submitSale() {
     id: Date.now().toString(36)+Math.random().toString(36).slice(2,5),
     sellerId: currentUser.id, client, product, pkg, duration, slots,
     startDate, endDate, amount, payment, agency, renewal, notes,
-    ts: Date.now(), isNew: true
+    stage: selectedStage || 'closed', ts: Date.now(), isNew: true
   };
   sales.unshift(sale); saveSales(); broadcast('NEW_SALE', { sale });
   ['f-client','f-product','f-notes','f-agency'].forEach(id => document.getElementById(id).value = '');
@@ -1739,6 +1945,7 @@ function submitSale() {
   document.getElementById('f-end-date').value   = '';
   document.getElementById('f-agency-wrap').style.display = 'none';
   selectedRenewal = '';
+  setStage('closed');
   ['yes','no','pending'].forEach(v => {
     document.getElementById('renew-'+v+'-lbl').style.borderColor = 'var(--border)';
     document.getElementById('renew-'+v+'-lbl').style.background  = 'var(--card)';
@@ -1767,6 +1974,7 @@ function renderFeed() {
     if (currentFeedFilter === 'Transfer') return s.payment === 'Transfer';
     if (currentFeedFilter === 'Credit')   return s.payment === 'Credit';
     if (currentFeedFilter === 'overdue')  return s.payment === 'Credit' && (now-s.ts) > OVERDUE_DAYS*86400000;
+    if (currentFeedFilter === 'pipeline') return s.stage && s.stage !== 'closed';
     return true;
   });
   if (query) {
@@ -1815,6 +2023,7 @@ function buildSaleCard(s) {
         ? `<span style="background:var(--green);color:#000;font-size:10px;font-weight:800;padding:0 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px">New</span>`
         : `<span style="visibility:hidden;font-size:10px;padding:0 6px">New</span>`}
       ${(()=>{const cs=getCampaignStatus(s);return cs?`<span class="status-badge status-${cs.cls}">${cs.label}</span>`:'';})()}
+      ${s.stage&&s.stage!=='closed'?`<span class="stage-pill ${s.stage}">${s.stage==='pending'?'\u23F3':'\uD83E\uDD1D'} ${s.stage}</span>`:''}
       ${s.payment==='Credit'?`<span style="font-size:10px;color:var(--yellow);font-weight:700">${creditAgeDays(s)}d old</span>`:''}
     </div>
 
@@ -2011,9 +2220,11 @@ function openDetail(id, e) {
     ['End Date',  fmtDate(s.endDate)],
     ['Amount',    '<span style="color:var(--green);font-weight:800">\u20A6' + fmtMoney(s.amount) + '</span>'],
     ['Payment',   `<span style="color:${payColor};font-weight:700">${s.payment || 'Cash'}</span>`],
-    s.payment === 'Credit' ? ['Agency', esc(s.agency || '—')] : null,
+    s.agency ? ['Agency', esc(s.agency)] : null,
     ['Renewal',   renewLabel[s.renewal] || '—'],
+    s.stage && s.stage !== 'closed' ? ['Pipeline', `<span class="stage-pill ${s.stage}">${s.stage==='pending'?'\u23F3':'\uD83E\uDD1D'} ${s.stage}</span>`] : null,
     s.notes ? ['Notes', `<em style="color:var(--text2)">"${esc(s.notes)}"</em>`] : null,
+    s.paidAt ? ['Paid On', `<span style="color:var(--green)">${new Date(s.paidAt).toLocaleDateString('en-NG')}</span>${s.paidNote?` <em style="color:var(--text2)">&ldquo;${esc(s.paidNote)}&rdquo;</em>`:''}`] : null,
     ['Logged',    relTime(s.ts)],
   ].filter(Boolean);
 
@@ -2031,8 +2242,9 @@ function openDetail(id, e) {
       </div>
     </div>`;
 
-  const shareBtn = `<div style="margin-top:14px">
-    <button onclick="shareReceipt('${s.id}')" style="width:100%;background:rgba(37,211,102,0.12);border:1.5px solid rgba(37,211,102,0.4);color:#25d366;font-size:13px;font-weight:700;padding:10px 0;border-radius:12px;cursor:pointer">📤 Share Receipt via WhatsApp</button>
+  const shareBtn = `<div style="margin-top:14px;display:flex;gap:8px">
+    <button onclick="shareReceipt('${s.id}')" style="flex:1;background:rgba(37,211,102,0.12);border:1.5px solid rgba(37,211,102,0.4);color:#25d366;font-size:13px;font-weight:700;padding:10px 0;border-radius:12px;cursor:pointer">\uD83D\uDCE4 WhatsApp</button>
+    <button onclick="printInvoice('${s.id}')" style="flex:1;background:rgba(78,127,255,0.12);border:1.5px solid rgba(78,127,255,0.4);color:var(--accent);font-size:13px;font-weight:700;padding:10px 0;border-radius:12px;cursor:pointer">\uD83D\uDDA8 Invoice</button>
   </div>`;
 
   document.getElementById('detail-body').innerHTML = rows.map(([lbl, val]) =>
