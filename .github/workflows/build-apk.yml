@@ -19,9 +19,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -29,6 +26,13 @@ jobs:
 
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Install required Android SDK components
+        run: |
+          sdkmanager "build-tools;33.0.0" "platforms;android-33" "platform-tools"
 
       - name: Generate signing keystore
         run: |
@@ -40,30 +44,25 @@ jobs:
             -validity 10000 \
             -storepass salestrack \
             -keypass salestrack \
-            -dname "CN=SalesTrack, OU=DiamondFM, O=DiamondFM, L=Lagos, ST=Lagos, C=NG" \
+            -dname "CN=SalesTrack, O=DiamondFM, C=NG" \
             -noprompt
 
       - name: Init Android TWA project
-        run: yes "" | bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
+        run: |
+          bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
         env:
-          BUBBLEWRAP_SKIP_UPDATE_CHECK: '1'
+          CI: 'true'
 
       - name: Build APK
-        run: |
-          echo "salestrack" | bubblewrap build
-        env:
-          BUBBLEWRAP_SIGNING_KEY_STORE_PASS: salestrack
-          BUBBLEWRAP_SIGNING_KEY_PASS: salestrack
+        run: printf 'salestrack\nsalestrack\n' | bubblewrap build --skipPwaShellUpdate
 
       - name: Find APK files
-        run: find . -name "*.apk" -not -path "*/node_modules/*" 2>/dev/null
+        run: find . -name "*.apk" -not -path "*/node_modules/*" | head -20
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: SalesTrack-Android-APK
-          path: |
-            **/*.apk
-            !**/node_modules/**
+          path: "**/*.apk"
           if-no-files-found: warn
           retention-days: 30
