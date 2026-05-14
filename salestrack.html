@@ -217,10 +217,10 @@
     border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
     margin: 7px 12px -2px;
   }
-  .empty-feed { padding: 70px 24px; text-align: center; }
-  .empty-icon { font-size: 60px; margin-bottom: 18px; }
-  .empty-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-  .empty-sub { font-size: 15px; color: var(--muted); line-height: 1.5; }
+  .empty-feed { margin: 0 12px 6px; padding: 11px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; gap: 10px; }
+  .empty-icon { font-size: 20px; flex-shrink: 0; }
+  .empty-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .empty-sub { font-size: 12px; color: var(--muted); line-height: 1.4; }
 
   /* ── DASHBOARD ── */
   .dash-header { padding: 22px 20px 8px; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
@@ -1940,7 +1940,7 @@ function renderFeed() {
     );
   }
   if (!filtered.length) {
-    el.innerHTML = `<div class="empty-feed"><div class="empty-icon">${sales.length?'\u{1F50D}':'\u{1F4ED}'}</div><div class="empty-title">${sales.length?'No matching sales':'No sales yet'}</div><div class="empty-sub">${sales.length?'Try a different search or filter':'Tap <strong>Log Sale</strong> to post your first deal!'}</div></div>`;
+    el.innerHTML = `<div class="empty-feed"><div class="empty-icon">${sales.length?'\u{1F50D}':'\u{1F4ED}'}</div><div><div class="empty-title">${sales.length?'No matching sales':'No sales yet'}</div><div class="empty-sub">${sales.length?'Try a different search or filter':'Tap \u2795\uFE0E Log Sale to post your first deal'}</div></div></div>`;
     return;
   }
   el.innerHTML = filtered.map(buildSaleCard).join('');
