@@ -58,8 +58,8 @@ jobs:
             -noprompt
 
       - name: Init Android TWA project
-        # Answer "n" to JDK install (we have Java 17), then Enter for all remaining prompts
-        run: printf 'n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n' | bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
+        # n = don't install JDK, $JAVA_HOME = path to our Java 17, then Enter for all remaining prompts
+        run: printf "n\n${JAVA_HOME}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" | bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
 
       - name: Build APK
         run: printf 'salestrack\nsalestrack\n' | bubblewrap build --skipPwaShellUpdate
