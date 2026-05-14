@@ -4,20 +4,11 @@
   "description": "Real-time sales tracker for the marketing team",
   "start_url": "/salestrack/salestrack.html",
   "scope": "/salestrack/",
-  "id": "/salestrack/salestrack.html",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#4f8ef7",
   "background_color": "#0f0f1a",
   "categories": ["business", "productivity"],
-  "screenshots": [
-    {
-      "src": "/salestrack/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
   "icons": [
     {
       "src": "/salestrack/icon-192.png",
