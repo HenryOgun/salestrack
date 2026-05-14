@@ -931,6 +931,22 @@
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Team Breakdown</div>
       <div id="adm-team-breakdown"></div>
     </div>
+    <!-- Manage Users -->
+    <div style="padding:14px 16px 0">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Manage Users</div>
+      <div id="adm-users-list" style="margin-bottom:12px"></div>
+      <div style="background:var(--card);border-radius:14px;border:1px solid var(--border);padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px">Add New User</div>
+        <input id="adm-user-name" class="form-input" type="text" placeholder="Full name" style="margin-bottom:8px">
+        <input id="adm-user-role" class="form-input" type="text" placeholder="Role (e.g. Marketer)" style="margin-bottom:8px">
+        <input id="adm-user-pass" class="form-input" type="text" placeholder="Password" style="margin-bottom:8px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="adm-user-emoji" class="form-input" type="text" placeholder="Emoji e.g. 👤" style="flex:1;text-align:center;font-size:20px">
+          <input id="adm-user-color" type="color" value="#4f8ef7" style="width:48px;height:48px;border:1.5px solid var(--border);border-radius:10px;background:var(--card2);cursor:pointer;padding:4px">
+        </div>
+        <button onclick="addTeamMember()" style="width:100%;padding:12px;background:var(--accent);border:none;color:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">Add User</button>
+      </div>
+    </div>
     <!-- Manage Ad Types -->
     <div style="padding:14px 16px 0">
       <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Manage Ad Types</div>
@@ -1063,6 +1079,7 @@ const TEAM = [
   { id: 'emeka', name: 'Chairman', role: 'Executive Oversight', pass: 'FioluTuyil@885', emoji: '\u{1F468}\u{1F3FE}\u200D\u{1F4BC}', color: '#f39c12' },
   { id: 'sola',  name: 'Admin',  role: 'Business Dev',  pass: 'Admin@887@885',  emoji: '\u{1F9D1}\u{1F3FD}\u200D\u{1F4BC}', color: '#1abc9c' },
 ];
+const BASE_TEAM_IDS = ['ada','tunde','grace','emeka','sola'];
 const OVERDUE_DAYS  = 30;
 let   announcements  = []; // loaded from Firebase
 let   salesComments  = {}; // { saleId: [{author,text,ts}] }
@@ -1713,6 +1730,49 @@ function printInvoice(id) {
   setTimeout(function(){ window.print(); }, 120);
 }
 
+// ── Manage Team Members ───────────────────────────────────────
+function addTeamMember() {
+  const name  = document.getElementById('adm-user-name').value.trim();
+  const role  = document.getElementById('adm-user-role').value.trim();
+  const pass  = document.getElementById('adm-user-pass').value.trim();
+  const emoji = document.getElementById('adm-user-emoji').value.trim() || '\u{1F464}';
+  const color = document.getElementById('adm-user-color').value || '#4f8ef7';
+  if (!name) { toast('Name is required'); return; }
+  if (!pass) { toast('Password is required'); return; }
+  const id = 'user_' + name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'') + '_' + Date.now();
+  const member = { id, name, role: role || 'Marketer', pass, emoji, color, custom: true };
+  db.ref('teamMembers/' + id).set(member).then(() => {
+    toast(name + ' added');
+    document.getElementById('adm-user-name').value = '';
+    document.getElementById('adm-user-role').value = '';
+    document.getElementById('adm-user-pass').value = '';
+    document.getElementById('adm-user-emoji').value = '';
+  }).catch(() => toast('Failed to add user'));
+}
+function deleteTeamMember(id) {
+  if (BASE_TEAM_IDS.includes(id)) { toast('Cannot remove built-in users'); return; }
+  const m = TEAM.find(t => t.id === id);
+  if (!confirm('Remove ' + (m ? m.name : 'this user') + ' from the team?')) return;
+  db.ref('teamMembers/' + id).remove().then(() => toast('User removed')).catch(() => toast('Failed'));
+}
+function renderAdminUsers() {
+  const el = document.getElementById('adm-users-list');
+  if (!el) return;
+  el.innerHTML = TEAM.map(m => {
+    const isBase = BASE_TEAM_IDS.includes(m.id);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:10px;border:1px solid var(--border);margin-bottom:6px">
+      <div style="width:34px;height:34px;border-radius:50%;background:${m.color}22;display:flex;align-items:center;justify-content:center;font-size:16px">${m.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(m.role)}</div>
+      </div>
+      ${isBase
+        ? '<span style="font-size:10px;color:var(--muted);background:var(--card2);padding:3px 8px;border-radius:6px;flex-shrink:0">Built-in</span>'
+        : `<button onclick="deleteTeamMember('${m.id}')" style="flex-shrink:0;background:rgba(231,76,60,0.12);border:1.5px solid rgba(231,76,60,0.4);color:#e74c3c;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer">Remove</button>`}
+    </div>`;
+  }).join('');
+}
+
 // ── Custom Ad Packages ────────────────────────────────────────
 function loadCustomPkgs() {
   try { customPackages = JSON.parse(localStorage.getItem(CUSTOM_PKG_KEY) || '[]'); } catch(e) { customPackages = []; }
@@ -1872,7 +1932,8 @@ function renderAdmin() {
     </div>`;
   }).join('');
 
-  // Render announcements
+  // Render sub-sections
+  renderAdminUsers();
   renderAdminAnnouncements();
   renderAdminPkgs();
 
@@ -2549,6 +2610,19 @@ function setupExtrasListener() {
   });
   db.ref('salesComments').on('value', snap => {
     salesComments = snap.val() || {};
+  });
+  db.ref('teamMembers').on('value', snap => {
+    const data = snap.val() || {};
+    // Remove previously synced custom members
+    for (let i = TEAM.length - 1; i >= 0; i--) {
+      if (!BASE_TEAM_IDS.includes(TEAM[i].id)) TEAM.splice(i, 1);
+    }
+    Object.values(data).forEach(m => {
+      if (!BASE_TEAM_IDS.includes(m.id)) TEAM.push(m);
+    });
+    renderAdminUsers();
+    renderTeam();
+    populatePkgSelects();
   });
 }
 
