@@ -1750,10 +1750,15 @@ function addTeamMember() {
   }).catch(() => toast('Failed to add user'));
 }
 function deleteTeamMember(id) {
-  if (BASE_TEAM_IDS.includes(id)) { toast('Cannot remove built-in users'); return; }
+  if (id === currentUser?.id) { toast("You can't remove yourself"); return; }
   const m = TEAM.find(t => t.id === id);
   if (!confirm('Remove ' + (m ? m.name : 'this user') + ' from the team?')) return;
-  db.ref('teamMembers/' + id).remove().then(() => toast('User removed')).catch(() => toast('Failed'));
+  if (BASE_TEAM_IDS.includes(id)) {
+    // Base users: mark deleted in Firebase so they're hidden but restorable via Edit
+    db.ref('teamMembers/' + id).set({ id, deleted: true }).then(() => toast('User removed')).catch(() => toast('Failed'));
+  } else {
+    db.ref('teamMembers/' + id).remove().then(() => toast('User removed')).catch(() => toast('Failed'));
+  }
 }
 function editTeamMember(id) {
   const m = TEAM.find(t => t.id === id);
@@ -1810,7 +1815,7 @@ function renderAdminUsers() {
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
         <button onclick="editTeamMember('${m.id}')" style="background:rgba(78,127,255,0.12);border:1.5px solid rgba(78,127,255,0.4);color:var(--accent);font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer">Edit</button>
-        ${isBase ? '' : `<button onclick="deleteTeamMember('${m.id}')" style="background:rgba(231,76,60,0.12);border:1.5px solid rgba(231,76,60,0.4);color:#e74c3c;font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer">Remove</button>`}
+        ${m.id !== currentUser?.id ? `<button onclick="deleteTeamMember('${m.id}')" style="background:rgba(231,76,60,0.12);border:1.5px solid rgba(231,76,60,0.4);color:#e74c3c;font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer">Remove</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -2662,10 +2667,15 @@ function setupExtrasListener() {
     }
     Object.values(data).forEach(m => {
       if (BASE_TEAM_IDS.includes(m.id)) {
-        // Override editable fields on base members
         const idx = TEAM.findIndex(t => t.id === m.id);
-        if (idx !== -1) { TEAM[idx].name = m.name; TEAM[idx].role = m.role; TEAM[idx].pass = m.pass; TEAM[idx].emoji = m.emoji; TEAM[idx].color = m.color; }
-      } else {
+        if (m.deleted) {
+          // Remove from TEAM if marked deleted
+          if (idx !== -1) TEAM.splice(idx, 1);
+        } else if (idx !== -1) {
+          // Override editable fields
+          TEAM[idx].name = m.name; TEAM[idx].role = m.role; TEAM[idx].pass = m.pass; TEAM[idx].emoji = m.emoji; TEAM[idx].color = m.color;
+        }
+      } else if (!m.deleted) {
         TEAM.push(m);
       }
     });
