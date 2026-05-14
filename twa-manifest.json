@@ -1,0 +1,41 @@
+{
+  "packageId": "com.diamondfm.salestrack",
+  "host": "henryogun.github.io",
+  "name": "SalesTrack",
+  "launcherName": "SalesTrack",
+  "display": "standalone",
+  "themeColor": "#4f8ef7",
+  "navigationColor": "#07080f",
+  "navigationColorDark": "#07080f",
+  "navigationDividerColor": "#4f8ef7",
+  "navigationDividerColorDark": "#4f8ef7",
+  "backgroundColor": "#0f0f1a",
+  "enableNotifications": true,
+  "startUrl": "/salestrack/salestrack.html",
+  "iconUrl": "https://henryogun.github.io/salestrack/icon-512.png",
+  "maskableIconUrl": "https://henryogun.github.io/salestrack/icon-512.png",
+  "monochromeIconUrl": "https://henryogun.github.io/salestrack/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "salestrack"
+  },
+  "appVersionCode": 1,
+  "appVersion": "1.0.0",
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://henryogun.github.io/salestrack/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": false },
+    "playBilling": { "enabled": false }
+  },
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://henryogun.github.io/salestrack/",
+  "minSdkVersion": 19,
+  "orientation": "portrait",
+  "fingerprints": []
+}
