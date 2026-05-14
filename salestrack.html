@@ -1966,7 +1966,10 @@ function renderFeed() {
   const el = document.getElementById('feed-list');
   const query = (document.getElementById('feed-search')?.value || '').toLowerCase().trim();
   const now = Date.now();
+  const todayStr = new Date().toISOString().slice(0,10);
   let filtered = sales.filter(s => {
+    // Hide ended sales from main feed
+    if (s.endDate && s.endDate < todayStr) return false;
     if (currentFeedFilter === 'Cash')     return s.payment === 'Cash';
     if (currentFeedFilter === 'Transfer') return s.payment === 'Transfer';
     if (currentFeedFilter === 'Credit')   return s.payment === 'Credit';
@@ -2083,7 +2086,7 @@ function renderTeam() {
   const visibleTeam = TEAM.filter(m=>m.id!=='emeka'&&m.id!=='sola');
   document.getElementById('team-cards').innerHTML = visibleTeam.map(m=>{
     const st=byM[m.id]; const isMe=m.id===currentUser?.id;
-    return `<div class="team-card" style="border-left:3px solid ${m.color}">
+    return `<div class="team-card" style="border-left:3px solid ${m.color};cursor:pointer" onclick="openMemberHistory('${m.id}')">
       <div class="team-avatar" style="background:${m.color}22">${m.emoji}</div>
       <div class="team-info">
         <div class="team-name-row"><span class="team-name">${m.name}${isMe?' <span style="color:var(--muted);font-size:12px;font-weight:400">(you)</span>':'' }</span><span class="online-badge">\u25CF Online</span></div>
@@ -2096,10 +2099,84 @@ function renderTeam() {
         <div style="display:flex;gap:12px;margin-top:6px;font-size:11px;color:var(--muted)">
           <span>🔥 ${getSalesStreak(m.id)}-day streak</span>
           <span>🕐 ${getLastActive(m.id)}</span>
+          <span style="margin-left:auto;color:var(--accent)">View logs →</span>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Member sales history sheet ────────────────────────────────
+function openMemberHistory(memberId) {
+  const m = TEAM.find(t => t.id === memberId);
+  if (!m) return;
+  const memberSales = sales.filter(s => s.sellerId === memberId).sort((a,b) => b.ts - a.ts);
+  const todayStr = new Date().toISOString().slice(0,10);
+  const activeSales = memberSales.filter(s => !s.endDate || s.endDate >= todayStr);
+  const endedSales  = memberSales.filter(s => s.endDate && s.endDate < todayStr);
+  const totalRev = memberSales.reduce((a,s)=>a+(s.amount||0),0);
+
+  const fmtD = d => d ? d.split('-').reverse().join('-') : '—';
+  const fmtAmt = n => '₦'+(n||0).toLocaleString();
+
+  function saleRow(s) {
+    const statusDot = (!s.endDate || s.endDate >= todayStr)
+      ? '<span style="color:var(--green);font-size:10px">● Active</span>'
+      : '<span style="color:var(--muted);font-size:10px">● Ended</span>';
+    return `<div onclick="openDetail('${s.id}')" style="padding:10px 12px;background:var(--card);border-radius:10px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${esc(s.client||'—')} ${s.product?'· '+esc(s.product):''}</div>
+        <div style="font-size:13px;font-weight:800;color:var(--green)">${fmtAmt(s.amount)}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px">
+        <div style="font-size:11px;color:var(--muted)">${esc(s.pkg||'')}${s.duration?' · '+esc(s.duration):''}${s.slots?' · '+s.slots+' slot'+(s.slots!==1?'s':''):''}</div>
+        ${statusDot}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${fmtD(s.startDate)} → ${fmtD(s.endDate)}</div>
+    </div>`;
+  }
+
+  let html = `<div style="display:flex;gap:10px;margin-bottom:14px">
+    <div style="flex:1;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:10px;text-align:center">
+      <div style="font-size:14px;font-weight:800;color:var(--green)">${fmtAmt(totalRev)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Total Revenue</div>
+    </div>
+    <div style="flex:1;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:10px;text-align:center">
+      <div style="font-size:14px;font-weight:800;color:var(--accent)">${activeSales.length}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Active</div>
+    </div>
+    <div style="flex:1;background:var(--card);border-radius:10px;border:1px solid var(--border);padding:10px;text-align:center">
+      <div style="font-size:14px;font-weight:800;color:var(--muted)">${endedSales.length}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Ended</div>
+    </div>
+  </div>`;
+
+  if (activeSales.length) {
+    html += `<div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Active Campaigns (${activeSales.length})</div>`;
+    html += activeSales.map(saleRow).join('');
+  }
+  if (endedSales.length) {
+    html += `<div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:12px 0 8px">Ended Campaigns (${endedSales.length})</div>`;
+    html += endedSales.map(saleRow).join('');
+  }
+  if (!memberSales.length) {
+    html += `<div style="text-align:center;padding:30px 0;color:var(--muted);font-size:13px">No sales logged yet</div>`;
+  }
+
+  document.getElementById('member-sheet-title').textContent = m.emoji + ' ' + m.name + ''s Sales Log';
+  document.getElementById('member-sheet-body').innerHTML = html;
+  document.getElementById('member-overlay').style.display = 'block';
+  const sheet = document.getElementById('member-sheet');
+  sheet.style.display = 'block';
+  requestAnimationFrame(() => sheet.style.transform = 'translateY(0)');
+}
+function closeMemberHistory() {
+  const sheet = document.getElementById('member-sheet');
+  sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => {
+    sheet.style.display = 'none';
+    document.getElementById('member-overlay').style.display = 'none';
+  }, 350);
 }
 
 function refreshAll() {
@@ -2754,6 +2831,19 @@ if ('serviceWorker' in navigator) {
     <button onclick="closeDetail()" style="background:var(--card2);border:none;color:var(--muted);font-size:18px;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
   </div>
   <div id="detail-body" style="padding:0 20px 40px"></div>
+</div>
+
+<!-- MEMBER HISTORY SHEET -->
+<div id="member-overlay" onclick="closeMemberHistory()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8100;backdrop-filter:blur(4px)"></div>
+<div id="member-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:8101;background:var(--surface);border-radius:24px 24px 0 0;border-top:1px solid var(--border2);max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.35s cubic-bezier(.34,1.1,.64,1)">
+  <div style="padding:12px 0 0;display:flex;justify-content:center">
+    <div style="width:40px;height:4px;background:var(--border2);border-radius:2px"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px">
+    <div style="font-size:17px;font-weight:800;color:var(--text)" id="member-sheet-title">Sales Log</div>
+    <button onclick="closeMemberHistory()" style="background:var(--card2);border:none;color:var(--muted);font-size:18px;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
+  </div>
+  <div id="member-sheet-body" style="padding:0 14px 40px"></div>
 </div>
 </body>
 </html>
