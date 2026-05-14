@@ -1397,9 +1397,19 @@ function doLogin() {
 function isChairman() { return currentUser && currentUser.id === 'emeka'; }
 function isAdmin()    { return currentUser && (currentUser.id === 'emeka' || currentUser.id === 'sola'); }
 
+function runMigrations() {
+  // Fix stale Firebase name for ada
+  if (!firebaseReady()) return;
+  db.ref('teamMembers/ada').once('value').then(snap => {
+    const d = snap.val();
+    if (d && d.name === 'Baba Marketing') db.ref('teamMembers/ada/name').set('Mr Oyedepo');
+  });
+}
+
 function enterApp() {
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-app').classList.add('active');
+  runMigrations();
   document.getElementById('topbar-avatar').textContent = currentUser.emoji;
   document.getElementById('topbar-name').textContent = currentUser.name;
   const adminRole = isAdmin();
