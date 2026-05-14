@@ -1755,20 +1755,63 @@ function deleteTeamMember(id) {
   if (!confirm('Remove ' + (m ? m.name : 'this user') + ' from the team?')) return;
   db.ref('teamMembers/' + id).remove().then(() => toast('User removed')).catch(() => toast('Failed'));
 }
+function editTeamMember(id) {
+  const m = TEAM.find(t => t.id === id);
+  if (!m) return;
+  // Toggle inline edit row
+  const row = document.getElementById('edit-row-' + id);
+  if (row) { row.remove(); return; }
+  const after = document.getElementById('user-row-' + id);
+  if (!after) return;
+  const div = document.createElement('div');
+  div.id = 'edit-row-' + id;
+  div.style.cssText = 'background:var(--card2);border-radius:10px;border:1px solid var(--border);padding:12px;margin-bottom:6px';
+  div.innerHTML = `
+    <div style="font-size:11px;font-weight:800;color:var(--accent);margin-bottom:8px">Edit: ${esc(m.name)}</div>
+    <input id="eu-name-${id}" class="form-input" type="text" value="${esc(m.name)}" placeholder="Name" style="margin-bottom:6px">
+    <input id="eu-role-${id}" class="form-input" type="text" value="${esc(m.role)}" placeholder="Role" style="margin-bottom:6px">
+    <input id="eu-pass-${id}" class="form-input" type="text" value="${esc(m.pass)}" placeholder="Password" style="margin-bottom:6px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input id="eu-emoji-${id}" class="form-input" type="text" value="${m.emoji}" placeholder="Emoji" style="flex:1;text-align:center;font-size:18px">
+      <input id="eu-color-${id}" type="color" value="${m.color}" style="width:48px;height:48px;border:1.5px solid var(--border);border-radius:10px;background:var(--card2);cursor:pointer;padding:4px">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="saveTeamMember('${id}')" style="flex:1;padding:10px;background:var(--accent);border:none;color:#fff;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save</button>
+      <button onclick="document.getElementById('edit-row-${id}').remove()" style="padding:10px 14px;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:10px;font-size:13px;cursor:pointer">Cancel</button>
+    </div>`;
+  after.insertAdjacentElement('afterend', div);
+}
+function saveTeamMember(id) {
+  const name  = document.getElementById('eu-name-'+id)?.value.trim();
+  const role  = document.getElementById('eu-role-'+id)?.value.trim();
+  const pass  = document.getElementById('eu-pass-'+id)?.value.trim();
+  const emoji = document.getElementById('eu-emoji-'+id)?.value.trim() || '\u{1F464}';
+  const color = document.getElementById('eu-color-'+id)?.value || '#4f8ef7';
+  if (!name) { toast('Name is required'); return; }
+  if (!pass) { toast('Password is required'); return; }
+  const m = TEAM.find(t => t.id === id);
+  const payload = { id, name, role: role||'Marketer', pass, emoji, color, custom: !BASE_TEAM_IDS.includes(id) };
+  db.ref('teamMembers/' + id).set(payload).then(() => {
+    toast(name + ' updated');
+    const row = document.getElementById('edit-row-' + id);
+    if (row) row.remove();
+  }).catch(() => toast('Failed to save'));
+}
 function renderAdminUsers() {
   const el = document.getElementById('adm-users-list');
   if (!el) return;
   el.innerHTML = TEAM.map(m => {
     const isBase = BASE_TEAM_IDS.includes(m.id);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:10px;border:1px solid var(--border);margin-bottom:6px">
+    return `<div id="user-row-${m.id}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border-radius:10px;border:1px solid var(--border);margin-bottom:6px">
       <div style="width:34px;height:34px;border-radius:50%;background:${m.color}22;display:flex;align-items:center;justify-content:center;font-size:16px">${m.emoji}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</div>
         <div style="font-size:11px;color:var(--muted)">${esc(m.role)}</div>
       </div>
-      ${isBase
-        ? '<span style="font-size:10px;color:var(--muted);background:var(--card2);padding:3px 8px;border-radius:6px;flex-shrink:0">Built-in</span>'
-        : `<button onclick="deleteTeamMember('${m.id}')" style="flex-shrink:0;background:rgba(231,76,60,0.12);border:1.5px solid rgba(231,76,60,0.4);color:#e74c3c;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer">Remove</button>`}
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="editTeamMember('${m.id}')" style="background:rgba(78,127,255,0.12);border:1.5px solid rgba(78,127,255,0.4);color:var(--accent);font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer">Edit</button>
+        ${isBase ? '' : `<button onclick="deleteTeamMember('${m.id}')" style="background:rgba(231,76,60,0.12);border:1.5px solid rgba(231,76,60,0.4);color:#e74c3c;font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer">Remove</button>`}
+      </div>
     </div>`;
   }).join('');
 }
@@ -2618,7 +2661,13 @@ function setupExtrasListener() {
       if (!BASE_TEAM_IDS.includes(TEAM[i].id)) TEAM.splice(i, 1);
     }
     Object.values(data).forEach(m => {
-      if (!BASE_TEAM_IDS.includes(m.id)) TEAM.push(m);
+      if (BASE_TEAM_IDS.includes(m.id)) {
+        // Override editable fields on base members
+        const idx = TEAM.findIndex(t => t.id === m.id);
+        if (idx !== -1) { TEAM[idx].name = m.name; TEAM[idx].role = m.role; TEAM[idx].pass = m.pass; TEAM[idx].emoji = m.emoji; TEAM[idx].color = m.color; }
+      } else {
+        TEAM.push(m);
+      }
     });
     renderAdminUsers();
     renderTeam();
