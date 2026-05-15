@@ -1,5 +1,5 @@
-const CACHE = 'salestrack-v6';
-const ASSETS = ['./salestrack.html', './manifest.json'];
+const CACHE = 'salestrack-v7';
+const ASSETS = ['./salestrack.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
