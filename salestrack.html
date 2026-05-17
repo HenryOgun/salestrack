@@ -2553,7 +2553,7 @@ function renderRenewalAlerts() {
     const seller = TEAM.find(m=>m.id===s.sellerId)||{emoji:'?',name:'?'};
     const daysLeft = Math.ceil((new Date(s.endDate)-new Date(today))/(86400000));
     return `<div class="renewal-alert-card">
-      <div style="font-size:12px;font-weight:800;color:var(--yellow)">&#128336; Campaign ending in ${daysLeft===0?'today':daysLeft+' day'+(daysLeft!==1?'s':'')}</div>
+      <div style="font-size:12px;font-weight:800;color:var(--yellow)">&#128336; ${daysLeft===0?'Campaign ending today':'Campaign ending in '+daysLeft+' day'+(daysLeft!==1?'s':'')}</div>
       <div style="font-size:13px;color:var(--text);margin-top:3px">${seller.emoji} ${esc(s.client)} &bull; ${esc(s.pkg||'General')}</div>
     </div>`;
   }).join('');
