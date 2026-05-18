@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+set timeout 600
+
+spawn /opt/homebrew/bin/bubblewrap init --manifest https://henryogun.github.io/salestrack/manifest.json
+
+# Answer yes to Android SDK install
+expect "Android SDK"   { send "y\r"; exp_continue }
+
+# Agree to SDK terms
+expect "terms"         { send "y\r"; exp_continue }
+
+# Accept all remaining prompts with Enter (uses defaults from manifest)
+expect "?"             { send "\r"; exp_continue }
+
+expect eof

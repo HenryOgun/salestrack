@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set timeout 300
+
+spawn /opt/homebrew/bin/bubblewrap build
+
+expect {
+  "Would you like to apply" { send "Y\r"; exp_continue }
+  "Password for the Key Store:" { send "salestrack\r" }
+}
+
+expect "Password for the Key:" { send "salestrack\r" }
+
+expect eof
